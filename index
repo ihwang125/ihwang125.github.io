@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isaac Hwang's Resume</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          max-width: 650px;
+          margin: 0 auto; /* Center the content */
+          padding: 20px; /* Add padding for better spacing */
+        }
+        h1, h2, h3, h4, h5, h6 {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          margin-botton: 10px;
+        }
+        .section {
+          margin-bottom: 10px;
+        }
+        .subsection {
+          margin-bottom: 10px;
+        }
+        .subsubsection {
+          margin-bottom: 5px;
+        }
+        .item {
+          margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Isaac Hwang</h1>
+    <p>
+        408-430-9962 | <a href="mailto:ihwang125@berkeley.edu">ihwang125@berkeley.edu</a> |
+        <a href="https://www.linkedin.com/in/isaac-hwang">linkedin.com/in/isaac-hwang</a> |
+        <a href="https://github.com/ihwang125">github.com/ihwang125</a>
+    </p>
+</header>
+
+<section class="section">
+    <h2>Skills</h2>
+    <ul>
+        <li class="item">
+            <strong>Languages</strong>: Python, SQL, Java, C++, HTML, CSS
+        </li>
+        <li class="item">
+            <strong>Libraries</strong>: <strong>PyTorch, Tensorflow, scikit-learn</strong>, pandas, NumPy, Matplotlib, Seaborn
+        </li>
+        <li class="item">
+            <strong>Developer Tools</strong>: Git, VS Code, Visual Studio, PyCharm, IntelliJ, Eclipse
+        </li>
+        <li class="item">
+            <strong>Frameworks</strong>: JUnit
+        </li>
+    </ul>
+</section>
+
+<section class="section">
+    <h2>Education</h2>
+    <div class="subsection">
+        <h3>University of California, Berkeley</h3>
+        <p>
+            Bachelor of Arts in <strong>Data Science</strong>; <strong>GPA: 3.82</strong><br>
+            Aug. 2023 -- May 2026
+        </p>
+    </div>
+    <div class="subsection">
+        <h3>Gavilan College</h3>
+        <p>
+            Associate of Science in <strong>Computer Programming, Mathematics</strong>; <strong>GPA: 3.88</strong><br>
+            Aug. 2019 -- May 2023<br>
+            <strong>Relevant Coursework</strong>: <strong>Principles of Data Science, Data Structures, Discrete Math & Probability</strong>
+        </p>
+    </div>
+</section>
+
+<section class="section">
+    <h2>Experience</h2>
+
+    <div class="subsection">
+        <h3>Undergraduate Research Assistant</h3>
+        <p>
+            University of California, Berkeley; Data Science Discovery Program, Berkeley, CA<br>
+            Sep. 2023 -- Jan. 2024
+        </p>
+        <ul>
+            <li class="item">
+                Developed <strong>OCR</strong> model for <strong>Old Assyrian</strong> characters with <strong>Dr. Adam Anderson, PhD</strong>
+            </li>
+            <li class="item">
+                Utilized <strong>OpenCV, SPARQL</strong>, pandas, Python
+            </li>
+            <li class="item">
+                Catalogued the <strong>MaiCuBeDa dataset</strong> for training
+            </li>
+        </ul>
+    </div>
+
+    <div class="subsection">
+        <h3>Data Science Intern</h3>
+        <p>
+            San Jose State University, San Jose, CA<br>
+            June 2022 - Aug. 2022
+        </p>
+        <ul>
+            <li class="item">
+                Trained multiple classification models with scikit-learn with <strong>average accuracy of 80%</strong> on student performance data
+            </li>
+            <li class="item">
+                Utilized Seaborn/MatPlotLib to create relevant statistics and visualizations of student data
+            </li>
+            <li class="item">
+                Presented to <strong>Dr. Shih-Yu Chang, PhD</strong> at the <strong>SJSU CE department</strong>
+            </li>
+        </ul>
+    </div>
+
+    <div class="subsection">
+        <h3>Logistics Lead</h3>
+        <p>
+            <a href="https://gilroyhacks.com/">Gilroy Hacks</a>, Gilroy, CA<br>
+            Jan. 2022 -- June 2023
+        </p>
+        <ul>
+            <li class="item">
+                Organized two hackathons raising <strong>$1000+ in prizes and 40 participants</strong>
+            </li>
+            <li class="item">
+                Reached out to local community business sponsors and tech companies, <strong>personally securing 3 sponsors</strong>
+            </li>
+            <li class="item">
+                Coordinated event logistics, venue organization, and outreach with <strong>Gilroy Library and Gavilan College</strong>
+            </li>
+            <li class="item">
+                Developed <strong>3-page work plan</strong> for all departments, specifying tasks and roles
+            </li>
+        </ul>
+    </div>
+
+</section>
+
+<section class="section">
+    <h2>Projects</h2>
+
+    <div class="subsection">
+        <h3>Spam Email Classification Model</h3>
+        <p>
+            April 2024
+        </p>
+        <ul>
+            <li class="item">
+                Trained a logistic regression model on a dataset of <strong>8000+ emails</strong> to classify spam emails with an <strong>accuracy of 86%</strong>
+            </li>
+            <li class="item">
+                Applied <strong>cross-validation and PCA</strong> techniques with Scikit-Learn
+            </li>
+            <li class="item">
+                Visualized dataset features with Seaborn and MatPlotLib
+            </li>
+            <li class="item">
+                Implemented <strong>Regex string manipulation / NLP</strong> techniques in <strong>feature engineering script</strong>
+            </li>
+        </ul>
+    </div>
+
+    <div class="subsection">
+        <h3>Visually-Impaired Assistance Application</h3>
+        <p>
+            April 2024
+        </p>
+        <ul>
+            <li class="item">
+                Trained machine learning model with PyTorch and TensorflowLite that identifies obstacles in visual field
+            </li>
+            <li class="item">
+                Built Android application that implements model and communicates obstacle information with vibrations
+            </li>
+            <li class="item">
+                Wrote script to convert PyTorch models into Tensorflow models
+            </li>
+            <li class="item">
+                Performed literature review of latest computer vision algorithms recorded in <strong>10-page paper</strong>
+            </li>
+            <li class="item">
+                Presented project to <strong>industry experts</strong> in <strong>computer software</strong>
+            </li>
+        </ul>
+    </div>
+
+</section>
+
+</body>
+</html>
