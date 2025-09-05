@@ -4,8 +4,95 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Becoming Friends with Your Camera</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 40px;
+        }
+        
+        .section {
+            background-color: white;
+            margin: 30px auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 600px;
+        }
+        
+        .photo, .gif {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .placeholder-image {
+            width: 400px;
+            height: 300px;
+            background-color: #ddd;
+            border: 2px dashed #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px auto;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .caption {
+            color: #666;
+            font-style: italic;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .image-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .photo-small, .gif-small {
+            width: 180px;
+            height: auto;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
     <h1>Becoming Friends with Your Camera</h1>
+    
+    <div class="section">
+        <h2>Part 1</h2>
+        <img src="IMG_5555.jpg" alt="Description" class="photo-small">
+        <img src="IMG_5556.jpg" alt="Description" class="photo-small">
+        <img src="IMG_5557.jpg" alt="Description" class="photo-small">
+       
+        <p class="caption">Demonstration of camera lens distortion at different distances on a person</p>
+    </div>
+    
+    <div class="section">
+        <h2>Part 2</h2>
+        <img src="IMG_5558.jpg" alt="Description" class="photo-small">
+        <img src="IMG_5559.jpg" alt="Description" class="photo-small">
+        <img src="IMG_5560.jpg" alt="Description" class="photo-small">
+        <p class="caption">Demonstration of the same distortion compression effect on a hallway</p>
+    </div>
+    
+    <div class="section">
+        <h2>Part 3</h2>
+        <img src="distortion.gif" alt="Description" class="gif">
+        <p class="caption">Demonstration of a dolly zoom on a cup</p>
+    </div>
 </body>
 </html>
