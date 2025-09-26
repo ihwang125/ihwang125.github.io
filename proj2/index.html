@@ -511,6 +511,60 @@
         <p style="text-align: center;">Code Snippet</p>
         <pre>
         <code>
+            '''
+            The convolve_color function in my ImageHandler class
+            
+            def convolve_color(self, kernel, stride=1, same=True, padding=((0, 0), (0, 0))):
+                '''
+                Main convolution function for handling the convolution operation on color images
+                Input: 
+                - kernel: A kernel of arbitrary shape
+                - stride: default 1
+                - same: boolean default to true, to keep output shape the same as input shape
+                - padding: default ((0, 0), (0, 0)) Defines
+                            padding added to the image for each of the four directions
+                Output:
+                - res: Output image after kernel applied to base image
+                '''
+                # Flip kernel
+                kernel = np.flip(kernel)
+                k, w = kernel.shape
+
+                if same:
+                    padding = ((math.floor((k - 1) / 2), math.ceil((k - 1)/ 2)), (math.floor((w - 1) / 2), math.ceil((w - 1) / 2)))
+
+                # Initialize with padding
+                a, b = self.image[:, :, 0].shape
+                base_channel_r = np.pad(self.image[:, :, 0], padding, 'constant', constant_values=0)
+                base_channel_g = np.pad(self.image[:, :, 1], padding, 'constant', constant_values=0)
+                base_channel_b = np.pad(self.image[:, :, 2], padding, 'constant', constant_values=0)
+
+                base = np.dstack([base_channel_r, base_channel_g, base_channel_b])
+
+                # Initialize empty res channels
+                res_r = []
+                res_g = []
+                res_b = []
+
+                for i in range(0, a + padding[0][0] + padding[0][1] - k + 1, stride):
+                    r_channel = np.array([])
+                    g_channel = np.array([])
+                    b_channel = np.array([])
+                    for j in range(0, b + padding[1][0] + padding[1][1] - w + 1, stride):
+                        r_channel = np.append(r_channel, base[i:i+k, j:j+w, 0].flatten() @ kernel.flatten())
+                        g_channel = np.append(g_channel, base[i:i+k, j:j+w, 1].flatten() @ kernel.flatten())
+                        b_channel = np.append(b_channel, base[i:i+k, j:j+w, 2].flatten() @ kernel.flatten())
+                    
+                    res_r.append(r_channel)
+                    res_g.append(g_channel)
+                    res_b.append(b_channel)
+                
+                res = np.dstack([res_r, res_g, res_b])
+
+                return res
+            '''
+
+            # Actual Code Snippet
             im1 = plt.imread('./images/blurred.jpg')
             im2 = plt.imread('./images/lion.jpg')
 
