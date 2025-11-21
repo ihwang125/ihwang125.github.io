@@ -1,5 +1,6 @@
 ---
 layout: base
+title: isaachwang.dev
 ---
 
 ## Projects 
