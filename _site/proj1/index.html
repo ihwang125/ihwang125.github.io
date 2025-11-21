@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 1 CS 180 Photos of the Russian Empire</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        h2 {
+            text-align: center;
+        }
+        
+        .section, .section-gallery {
+            background-color: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 1000px;
+        }
+
+        .section-gallery {
+            text-align: center;
+        }
+
+        .section-gallery h2 {
+            margin-bottom: 20px;
+        }
+
+        .section-gallery .images {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .photo, .gif {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .placeholder-image {
+            width: 400px;
+            height: 300px;
+            background-color: #ddd;
+            border: 2px dashed #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px auto;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .image-container {
+            width: 360px;
+        }
+        
+        .caption {
+            color: #666;
+            font-style: italic;
+            font-size: 16px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .caption-small {
+            color: #666;
+            font-style: italic;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .image-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .photo-small, .gif-small {
+            width: 180px;
+            height: auto;
+            border-radius: 5px;
+        }
+
+        .photo-mid {
+            width: 360px;
+            height: auto;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Project 1: Images of the Russian Empire</h1>
+    
+    <div class="section">
+        <h2>Introduction</h2>
+        <p>
+            Taking photo negatives in the three color channels, Prokudin-Gorskii was a visionary in the field of color photography in late Tsarist Russia, a time when black and white images dominated contemporary media. At the time, Prokudin-Gorskii planned to have these images be projected in the three channels of Red, Blue, and Green by special projectors that stacked three lenses pointed towards a surface at the right angles for optimal alignment, allowing students in Russian classrooms to view color images for the first time in history. Unfortunately, that dream never realized after the Soviets took power, and these pictures were only bought by the library of congress nearly a hundred years later, after which the process of digitization and colorization began. This document is a record of the attempt that I took in following the steps of the LIC (Library of Congress) and I had quite a bit of fun creating vivid reconstructions of these images, providing a closer glimpse into what people nearly a hundred years ago would have seen while traversing the vast stretches of a dying empire.
+        </p>
+    </div>
+    <div class="section">
+        <h2>Algorithm</h2>
+        <p>At first, I thought to start from first principles, and see where we could begin. I first converted the raw image into an np array of float64 values, calculated the shape of the stacked image by dividing the height by 3, extracting the three channels' corresponding photos, and stacking the channels, which were in BGR format, into RGB. This yields some semblance of a color, but because the channels are unaligned, it is a noisy mess.
+        </p>
+        <img src="out_cathedral.jpg" alt="Description" class="photo">
+        <p class="caption">Oh no! The three channels don't seem to line up!</p>
+        <p>I then started implmenting a naive approach to my algorithm, by using a simple linear search within the neighborhood of possible displacements from (-15, -15) to (15, 15) and np.roll to shift the image along the x and y axis by a the amounts defined by the candidate displacement vectors while comparing either the base channel - blue - against the alternative channel, red or green, using a metric for the similarity between two images. In this case, I used Euclidean distance. I also realized, in the process of implementing this naive vector, that the edges of each channel, being non-aligned and greatly different looking in terms of raw pixel brightness would introduce noise into the calculation, so I cut off the edges by about 25% in both the x and y directions, keeping only the most important parts of the image for our task to be used for image similarity comparison. Assuming that the ideal displacement vector that maximizes image similarity exists within the neighborhood of (-15, -15) to (15, 15), I tried applying this naive approach to a small image, cathedral.jpg</p>
+        <img src="images/out_cathedral_ncc.jpg" alt="Description" class="photo">
+        <p class="caption">This seems to work quite well for the cathedral image!</p>
+        <p>I tried this naive method on other jpg images, but as I tried scaling the method up to larger .tif images, the performaance drastically decreased. This is because we make around 30 * 30 = 900 comparisons between images for this naive linear search, and for larger images, having this many comparisons just doesn't cut it for performance.</p>
+        <p>Since the method works well for small images, by downscaling larger images into small versions, we can apply the method to the smaller versions, upscale by one factor of 2, apply the method again, using the initial guess that the naive approach gave us from the previous round as a starting point. We can then recursively apply the naive approach with a tightened neighborhood each factor of 2 we upscaled, until we reached the original scale, and obtained a resulting displacement vector that maximized the euclidean distance metric with a logarithmically smaller number of comparisons. On top of this, I updated my naive search algorithm from a linear search over all 900 displacement to a coarse-to-fine search iteratively explores candidate sub neighborhoods and tightens the search radius given no improvement from the current sub neighborhood. This reduced the number of comparisons at each round from 900 comparisons to around 30-50 comparisons per round. Combining this approach with the image pyramid meant that instead of making potentially a hundred thousand comparisons between images, we could make around 150 to 250 comparisons in total because I set the number of rounds for recursion of our image pyramid downscaling to 5 by default, a parameter that seems to work well in my tests. For each .tif image, the algorithm took around 2 seconds to calculate the displacement vector, and for each .jpg image, it took around half a second for the naive approach. For each downscaled image, I also applied the step from the naive approach to cut off the borders by a certain percentage, which also worked excellent in my tests. However, I still seemed to struggle with certain images, such as the emir, which has drastically different pixel values for each of the three channels, so I tried implementing NCC instead, which slightly impacted performance by about half a second for large images but yielded optimal results for nearly all of the images.</p>
+    </div>
+    <div class="section-gallery">
+        <h2>Gallery</h2>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/out_cathedral_ncc.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">cathedral<br>green offset: (5, 2)<br>red offset: (12, 3)<br>0.56 seconds</p>
+            </div>
+            <div class="image-container">
+                <img src="images/out_church_ncc.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">church<br>green offset: (26, 2)<br>red offset: (58, -6)<br>2.55 seconds</p>
+            </div>
+            <div class="image-container">
+                <img src="images/out_emir_ncc.jpg" class="photo-mid">
+                <p class="caption-small">emir<br>green offset: (50, 24)<br>red offset: (104, 42)<br>2.79 seconds</p>
+            </div>
+            <div class="image-container">
+                <img src="images/out_harvesters_ncc.jpg" class="photo-mid">
+                <p class="caption-small">harvesters<br>green offset: (60, 16)<br>red offset: (124, 14)<br>2.22 seconds</p>
+            </div>
+            <div class="image-container">
+                <img src="images/out_italil_ncc.jpg" class="photo-mid">
+                <p class="caption-small">italil<br>green offset: (38, 20)<br>red offset: (76, 36)<br>2.72 seconds</p>
+            </div>
+            <div class="image-container">
+                <img src="images/out_monastery_ncc.jpg" class="photo-mid">
+                <p class="caption-small">monastery<br>green offset: (-3, 2)<br>red offset: (3, 2)<br>0.65 seconds</p>
+            </div>
+            <div class="image-container">
+                <img src="images/out_three_generations_ncc.jpg" class="photo-mid">
+                <p class="caption-small">three_generations<br>green offset: (54, 12)<br>red offset: (112, 10)<br>3.11 seconds</p>
+            </div>
+            <div class="image-container">
+                <img src="images/out_lugano_ncc.jpg" class="photo-mid">
+                <p class="caption-small">lugano<br>green offset: (40, -16)<br>red offset: (92, -28)<br>2.76 seconds</p>
+            </div>
+            <div class="image-container">
+                <img src="images/out_melons_ncc.jpg" class="photo-mid">
+                <p class="caption-small">melons<br>green offset: (82, 10)<br>red offset: (178, 12)<br>3.38 seconds</p>
+            </div>
+            <div class="image-container">
+                <img src="images/out_lastochikino_ncc.jpg" class="photo-mid">
+                <p class="caption-small">lastochikino<br>green offset: (-2, -2)<br>red offset: (76, -8)<br>2.62 seconds</p>
+            </div>
+            <div class="image-container">
+                <img src="images/out_tobolsk_ncc.jpg" class="photo-mid">
+                <p class="caption-small">tobolsk<br>green offset: (3, 3)<br>red offset: (6, 3)<br>0.55 seconds</p>
+            </div>
+            <div class="image-container">
+                <img src="images/out_icon_ncc.jpg" class="photo-mid">
+                <p class="caption-small">icon<br>green offset: (40, 16)<br>red offset: (90, 22)<br>2.63 seconds</p>
+            </div>
+            <div class="image-container">
+                <img src="images/out_siren_ncc.jpg" class="photo-mid">
+                <p class="caption-small">siren<br>green offset: (50, -6)<br>red offset: (96, -24)<br>2.85 seconds</p>
+            </div>
+            <div class="image-container">
+                <img src="images/out_self_portrait_ncc.jpg" class="photo-mid">
+                <p class="caption-small">self_portrait<br>green offset: (80, 28)<br>red offset: (176, 34)<br>3.16 seconds</p>
+            </div>
+        </div>
+    </div>
+    <div class="section">
+        <h2>Select Examples from Prokudin-Gorskii Collection</h2>
+        <img src="images/out_russian_ncc.jpg" alt="Description" class="photo">
+        <p class="caption">A .tif picture of a cloth with Russian text colorized with my algorithm</p>
+        <img src="images/out_sunset_ncc.jpg" alt="Description" class="photo">
+        <p class="caption">A .tif picture of a sunset</p>
+        <img src="images/out_mosque_ncc.jpg" alt="Description" class="photo">
+        <p class="caption">A .jpg picture of a mosque</p>
+    </div>
+</body>
+</html>

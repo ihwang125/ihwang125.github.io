@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 3: Image Warping and Mosaicing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        h2 {
+            text-align: center;
+        }
+        
+        .section, .section-gallery {
+            background-color: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 1000px;
+        }
+
+        /* .section-gallery {
+            text-align: center;
+        } */
+
+        .section-gallery h2 {
+            margin-bottom: 20px;
+        }
+
+        .section-gallery .images {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .photo, .gif {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .placeholder-image {
+            width: 400px;
+            height: 300px;
+            background-color: #ddd;
+            border: 2px dashed #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px auto;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .image-container {
+            width: 360px;
+        }
+
+        .image-container2 {
+            width: 240px;
+        }
+        
+        .caption {
+            color: #666;
+            font-style: italic;
+            font-size: 16px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .caption-small {
+            color: #666;
+            font-style: italic;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .image-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .photo-small, .gif-small {
+            width: 180px;
+            height: auto;
+            border-radius: 5px;
+        }
+
+        .photo-mid {
+            width: 360px;
+            height: auto;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Project 3: Image Warping and Mosaicing</h1>
+    <div class="section-gallery">
+        <h2>Part A.1</h2>
+        <p>
+            Here are two sets of pictures of my living room I took for the following homography and mosaicing experiments.
+        </p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/livingroomleft1.jpg" alt="Description" class="photo-small">
+            </div>
+            <div class="image-container">
+                <img src="images/livingroomright1.jpg" alt="Description" class="photo-small">
+            </div>
+        </div>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/left.jpg" alt="Description" class="photo-small">
+            </div>
+            <div class="image-container">
+                <img src="images/mid.jpg" alt="Description" class="photo-small">
+            </div>
+            <div class="image-container">
+                <img src="images/right.jpg" class="photo-small">
+            </div>
+        </div>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/leftkitchen.jpg" alt="Description" class="photo-small">
+            </div>
+            <div class="image-container">
+                <img src="images/rightkitchen.jpg" alt="Description" class="photo-small">
+            </div>
+        </div>
+    </div>
+    <div class="section-gallery">
+        <h2>Part A.2</h2>
+        <p>I derived the equations per correspondence of points using the equation p' = Hp where H represents 
+            the 9 - 1 = 8 unknown variables that determine the homography, rewritten to be a systems of equations 
+            Ah = b where the vector h holds the 8 unknowns and the vector b holds the x and y coordinates of the target 
+            coordinate per correspondence, and A is of shape 2n-1 x 8, where n is the number of correspondences, with each consecutive set of 2 adjacent rows 
+            representing the equation for the correspondence from p = (x, y) to p' = (xp, yp) with the first row of the set being 
+            ax + by + c - g * x * xp - h * y * xp = xp and the second row of the set being dx + ey + f - g * x * yp - h * y * yp = yp . Then the correspondence equations can be setup 
+            to solve for the unknowns of the homography: a, b, c, d, e, f, g, h. If the system is overconstrained, then we use Least Squares to estimate the unknowns.
+
+            The following are the results of my function, which takes in im1_pts and im2_pts of ten correspondences and computes the homography matrix H:
+        </p>
+        <img src="images/livingroomcorrespondencesA2.jpg" alt="Description" class="photo">
+        <p class="caption-small">Living Room Correspondences</p>
+        <pre>
+            <code>
+                For correspondence: ( 2762 ,  441 ) -> ( 1067 ,  1890 )
+                a *  2762  + b *  441  + c - g *  2762  *  1067  - h *  441  *  1067  =  1067
+                d *  2762  + e *  441  + f - g *  2762  *  1890  - h *  441  *  1890  =  1890
+                For correspondence: ( 2304 ,  1887 ) -> ( 1454 ,  461 )
+                a *  2304  + b *  1887  + c - g *  2304  *  1454  - h *  1887  *  1454  =  1454
+                d *  2304  + e *  1887  + f - g *  2304  *  461  - h *  1887  *  461  =  461
+                For correspondence: ( 2647 ,  1749 ) -> ( 1390 ,  1746 )
+                a *  2647  + b *  1749  + c - g *  2647  *  1390  - h *  1749  *  1390  =  1390
+                d *  2647  + e *  1749  + f - g *  2647  *  1746  - h *  1749  *  1746  =  1746
+                For correspondence: ( 2887 ,  3883 ) -> ( 1634 ,  3803 )
+                a *  2887  + b *  3883  + c - g *  2887  *  1634  - h *  3883  *  1634  =  1634
+                d *  2887  + e *  3883  + f - g *  2887  *  3803  - h *  3883  *  3803  =  3803
+                For correspondence: ( 1817 ,  2736 ) -> ( 580 ,  2749 )
+                a *  1817  + b *  2736  + c - g *  1817  *  580  - h *  2736  *  580  =  580
+                d *  1817  + e *  2736  + f - g *  1817  *  2749  - h *  2736  *  2749  =  2749
+                For correspondence: ( 2115 ,  3297 ) -> ( 878 ,  3287 )
+                a *  2115  + b *  3297  + c - g *  2115  *  878  - h *  3297  *  878  =  878
+                d *  2115  + e *  3297  + f - g *  2115  *  3287  - h *  3297  *  3287  =  3287
+                For correspondence: ( 2131 ,  2134 ) -> ( 881 ,  2134 )
+                a *  2131  + b *  2134  + c - g *  2131  *  881  - h *  2134  *  881  =  881
+                d *  2131  + e *  2134  + f - g *  2131  *  2134  - h *  2134  *  2134  =  2134
+                For correspondence: ( 2788 ,  2537 ) -> ( 1541 ,  2502 )
+                a *  2788  + b *  2537  + c - g *  2788  *  1541  - h *  2537  *  1541  =  1541
+                d *  2788  + e *  2537  + f - g *  2788  *  2502  - h *  2537  *  2502  =  2502
+                For correspondence: ( 2461 ,  3909 ) -> ( 1208 ,  3867 )
+                a *  2461  + b *  3909  + c - g *  2461  *  1208  - h *  3909  *  1208  =  1208
+                d *  2461  + e *  3909  + f - g *  2461  *  3867  - h *  3909  *  3867  =  3867
+                For correspondence: ( 1711 ,  1082 ) -> ( 333 ,  1076 )
+                a *  1711  + b *  1082  + c - g *  1711  *  333  - h *  1082  *  333  =  333
+                d *  1711  + e *  1082  + f - g *  1711  *  1076  - h *  1082  *  1076  =  1076
+                Resulting Homography:
+                [[-4.53682043e-01  7.89360698e-02  8.34484094e+02]
+                [-1.11469027e+00  1.79091542e-01  2.24068775e+03]
+                [-4.93035088e-04  7.31031407e-05  1.00000000e+00]]
+            </code>
+        </pre>
+        <img src="images/kitchen_correspondencesA2.jpg" alt="Description" class="photo">
+        <p class="caption-small">Kitchen Correspondences</p>
+        <pre>
+            <code>
+                For correspondence: ( 2078 ,  312 ) -> ( 890 ,  278 )
+                a *  2078  + b *  312  + c - g *  2078  *  890  - h *  312  *  890  =  890
+                d *  2078  + e *  312  + f - g *  2078  *  278  - h *  312  *  278  =  278
+                For correspondence: ( 2065 ,  1753 ) -> ( 913 ,  1730 )
+                a *  2065  + b *  1753  + c - g *  2065  *  913  - h *  1753  *  913  =  913
+                d *  2065  + e *  1753  + f - g *  2065  *  1730  - h *  1753  *  1730  =  1730
+                For correspondence: ( 2854 ,  1168 ) -> ( 1679 ,  1159 )
+                a *  2854  + b *  1168  + c - g *  2854  *  1679  - h *  1168  *  1679  =  1679
+                d *  2854  + e *  1168  + f - g *  2854  *  1159  - h *  1168  *  1159  =  1159
+                For correspondence: ( 2805 ,  3201 ) -> ( 1653 ,  3130 )
+                a *  2805  + b *  3201  + c - g *  2805  *  1653  - h *  3201  *  1653  =  1653
+                d *  2805  + e *  3201  + f - g *  2805  *  3130  - h *  3201  *  3130  =  3130
+                For correspondence: ( 1509 ,  2720 ) -> ( 346 ,  2710 )
+                a *  1509  + b *  2720  + c - g *  1509  *  346  - h *  2720  *  346  =  346
+                d *  1509  + e *  2720  + f - g *  1509  *  2710  - h *  2720  *  2710  =  2710
+                For correspondence: ( 1519 ,  3602 ) -> ( 371 ,  3608 )
+                a *  1519  + b *  3602  + c - g *  1519  *  371  - h *  3602  *  371  =  371
+                d *  1519  + e *  3602  + f - g *  1519  *  3608  - h *  3602  *  3608  =  3608
+                For correspondence: ( 1900 ,  2772 ) -> ( 772 ,  2771 )
+                a *  1900  + b *  2772  + c - g *  1900  *  772  - h *  2772  *  772  =  772
+                d *  1900  + e *  2772  + f - g *  1900  *  2771  - h *  2772  *  2771  =  2771
+                For correspondence: ( 1897 ,  3906 ) -> ( 772 ,  3893 )
+                a *  1897  + b *  3906  + c - g *  1897  *  772  - h *  3906  *  772  =  772
+                d *  1897  + e *  3906  + f - g *  1897  *  3893  - h *  3906  *  3893  =  3893
+                For correspondence: ( 2304 ,  735 ) -> ( 1131 ,  714 )
+                a *  2304  + b *  735  + c - g *  2304  *  1131  - h *  735  *  1131  =  1131
+                d *  2304  + e *  735  + f - g *  2304  *  714  - h *  735  *  714  =  714
+                For correspondence: ( 2275 ,  3418 ) -> ( 1134 ,  3377 )
+                a *  2275  + b *  3418  + c - g *  2275  *  1134  - h *  3418  *  1134  =  1134
+                d *  2275  + e *  3418  + f - g *  2275  *  3377  - h *  3418  *  3377  =  3377
+                Resulting Homography:
+                [[ 1.14564028e+00  2.09444538e-02 -1.41079985e+03]
+                [ 7.05217173e-02  1.10379879e+00 -1.88662006e+02]
+                [ 4.16649556e-05  4.06494659e-06  1.00000000e+00]]
+            </code>
+        </pre>
+        <img src="images/leftmidcorrespondencesA2.jpg" alt="Description" class="photo">
+        <p class="caption-small">Left Living Room to Mid Living Room Correspondences</p>
+        <pre>
+            <code>
+                For correspondence: ( 1825 ,  1679 ) -> ( 131 ,  1588 )
+                a *  1825  + b *  1679  + c - g *  1825  *  131  - h *  1679  *  131  =  131
+                d *  1825  + e *  1679  + f - g *  1825  *  1588  - h *  1679  *  1588  =  1588
+                For correspondence: ( 1797 ,  2846 ) -> ( 199 ,  2868 )
+                a *  1797  + b *  2846  + c - g *  1797  *  199  - h *  2846  *  199  =  199
+                d *  1797  + e *  2846  + f - g *  1797  *  2868  - h *  2846  *  2868  =  2868
+                For correspondence: ( 2678 ,  1879 ) -> ( 1094 ,  1824 )
+                a *  2678  + b *  1879  + c - g *  2678  *  1094  - h *  1879  *  1094  =  1094
+                d *  2678  + e *  1879  + f - g *  2678  *  1824  - h *  1879  *  1824  =  1824
+                For correspondence: ( 2728 ,  3472 ) -> ( 1271 ,  3436 )
+                a *  2728  + b *  3472  + c - g *  2728  *  1271  - h *  3472  *  1271  =  1271
+                d *  2728  + e *  3472  + f - g *  2728  *  3436  - h *  3472  *  3436  =  3436
+                For correspondence: ( 3241 ,  4303 ) -> ( 1788 ,  4194 )
+                a *  3241  + b *  4303  + c - g *  3241  *  1788  - h *  4303  *  1788  =  1788
+                d *  3241  + e *  4303  + f - g *  3241  *  4194  - h *  4303  *  4194  =  4194
+                For correspondence: ( 3305 ,  4866 ) -> ( 1838 ,  4725 )
+                a *  3305  + b *  4866  + c - g *  3305  *  1838  - h *  4866  *  1838  =  1838
+                d *  3305  + e *  4866  + f - g *  3305  *  4725  - h *  4866  *  4725  =  4725
+                For correspondence: ( 2642 ,  5452 ) -> ( 1189 ,  5438 )
+                a *  2642  + b *  5452  + c - g *  2642  *  1189  - h *  5452  *  1189  =  1189
+                d *  2642  + e *  5452  + f - g *  2642  *  5438  - h *  5452  *  5438  =  5438
+                For correspondence: ( 2401 ,  4312 ) -> ( 935 ,  4335 )
+                a *  2401  + b *  4312  + c - g *  2401  *  935  - h *  4312  *  935  =  935
+                d *  2401  + e *  4312  + f - g *  2401  *  4335  - h *  4312  *  4335  =  4335
+                For correspondence: ( 3954 ,  3241 ) -> ( 2406 ,  3091 )
+                a *  3954  + b *  3241  + c - g *  3954  *  2406  - h *  3241  *  2406  =  2406
+                d *  3954  + e *  3241  + f - g *  3954  *  3091  - h *  3241  *  3091  =  3091
+                For correspondence: ( 3945 ,  3745 ) -> ( 2424 ,  3572 )
+                a *  3945  + b *  3745  + c - g *  3945  *  2424  - h *  3745  *  2424  =  2424
+                d *  3945  + e *  3745  + f - g *  3945  *  3572  - h *  3745  *  3572  =  3572
+                Resulting Homography:
+                [[ 1.36177512e+00  5.76739576e-02 -2.40577571e+03]
+                [ 1.18375936e-01  1.26834132e+00 -5.12218830e+02]
+                [ 7.27022885e-05  8.06239175e-06  1.00000000e+00]]
+            </code>
+        </pre>
+        <img src="images/midrightcorrespondencesA2.jpg" alt="Description" class="photo">
+        <p class="caption-small">Middle Living Room to Right Living Room Correspondences</p>
+        <pre>
+            <code>
+                For correspondence: ( 4104 ,  1438 ) -> ( 1971 ,  1508 )
+                a *  4104  + b *  1438  + c - g *  4104  *  1971  - h *  1438  *  1971  =  1971
+                d *  4104  + e *  1438  + f - g *  4104  *  1508  - h *  1438  *  1508  =  1508
+                For correspondence: ( 4249 ,  4357 ) -> ( 2188 ,  4115 )
+                a *  4249  + b *  4357  + c - g *  4249  *  2188  - h *  4357  *  2188  =  2188
+                d *  4249  + e *  4357  + f - g *  4249  *  4115  - h *  4357  *  4115  =  4115
+                For correspondence: ( 3659 ,  1779 ) -> ( 1612 ,  1813 )
+                a *  3659  + b *  1779  + c - g *  3659  *  1612  - h *  1779  *  1612  =  1612
+                d *  3659  + e *  1779  + f - g *  3659  *  1813  - h *  1779  *  1813  =  1813
+                For correspondence: ( 3096 ,  4367 ) -> ( 1173 ,  4322 )
+                a *  3096  + b *  4367  + c - g *  3096  *  1173  - h *  4367  *  1173  =  1173
+                d *  3096  + e *  4367  + f - g *  3096  *  4322  - h *  4367  *  4322  =  4322
+                For correspondence: ( 3037 ,  2887 ) -> ( 1132 ,  2860 )
+                a *  3037  + b *  2887  + c - g *  3037  *  1132  - h *  2887  *  1132  =  1132
+                d *  3037  + e *  2887  + f - g *  3037  *  2860  - h *  2887  *  2860  =  2860
+                For correspondence: ( 2973 ,  4026 ) -> ( 1063 ,  4013 )
+                a *  2973  + b *  4026  + c - g *  2973  *  1063  - h *  4026  *  1063  =  1063
+                d *  2973  + e *  4026  + f - g *  2973  *  4013  - h *  4026  *  4013  =  4013
+                For correspondence: ( 3790 ,  2891 ) -> ( 1815 ,  2841 )
+                a *  3790  + b *  2891  + c - g *  3790  *  1815  - h *  2891  *  1815  =  1815
+                d *  3790  + e *  2891  + f - g *  3790  *  2841  - h *  2891  *  2841  =  2841
+                For correspondence: ( 3967 ,  4049 ) -> ( 1971 ,  3861 )
+                a *  3967  + b *  4049  + c - g *  3967  *  1971  - h *  4049  *  1971  =  1971
+                d *  3967  + e *  4049  + f - g *  3967  *  3861  - h *  4049  *  3861  =  3861
+                For correspondence: ( 3613 ,  4789 ) -> ( 1672 ,  4608 )
+                a *  3613  + b *  4789  + c - g *  3613  *  1672  - h *  4789  *  1672  =  1672
+                d *  3613  + e *  4789  + f - g *  3613  *  4608  - h *  4789  *  4608  =  4608
+                For correspondence: ( 3595 ,  5297 ) -> ( 1681 ,  5116 )
+                a *  3595  + b *  5297  + c - g *  3595  *  1681  - h *  5297  *  1681  =  1681
+                d *  3595  + e *  5297  + f - g *  3595  *  5116  - h *  5297  *  5116  =  5116
+                SystemError: null argument to internal routine
+                Resulting Homography:
+                [[ 1.15203274e+00  1.23621323e-02 -2.24200472e+03]
+                [ 8.81759785e-02  1.07632997e+00 -9.70462795e+00]
+                [ 6.79286778e-05 -1.34364807e-05  1.00000000e+00]]
+            </code>
+        </pre>
+    </div>
+    <div class="section-gallery">
+        <h2>Part A.3</h2>
+        <p>
+            I used inverse warping for both my implementation of Nearest Neighbor Interpolation and Bilinear Interpolation. For both methods, I computed the 
+            resulting image size by piping the four corners of the base image through the inverse homography. For Nearest Neighbor interpolation, I rounded the corresponding coordinate value 
+            I got from apply my inverse warping for each pixel of result I constructed back to the original image, and took the pixel RGB value at the nearest integer coordinate of the original image. For the Bilinear approach, 
+            I built upon the NN approach by averaging the neighbors - in the original image - of the integer-rounded result I got from applying my inverse homography on each coordinate of the resulting image I wished to construct. 
+            I found that the results didn't really seem that different unless you closely inspect the results of each method, which even then was hard to find difference. The main difference was the speed at which the methods ran. The NN method 
+            ran on average 3 times faster than my Bilinear method, without significant improvement in the quality of my result. Some potential downsides in terms of quality would be aliasing and jagged edges, 
+            pixelation on diagonals or curves, but when the image content is already low-res, and speed is important, then the tradeoffs make sense for the nearest neighbors method. The bilinear method, while it does 
+            improve the quality of the image by providing smoother transitions between pixels and reduced aliasing, does require 4 pixel lookups instead of one and more operations that keep track of the average, compared to the two rounding 
+            operations and 1 pixel lookup of nearest neighbors. However, since we are averaging values, we could introduce some slight blurring with the bilinear method.
+
+            For the image rectification, I applied my homography to the four corners of the image I wish to be rectified as im1_pts, and for im2_pts, I set to be [0, 0], [a, 0], [a, b], [0, b], where a and b are the respective average widths and heights of the 
+            trapezoidal figure I wish to turn into a rectangle.
+        </p>
+        <p style="text-align: center;">Rectification Results</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/eltonjohn.jpg" alt="Description" class="photo-small">
+            </div>
+        </div>
+        <img src="images/eltonjohnnnA2.jpg" alt="Description" class="photo">
+        <p class="caption-small">Elton John Rectified Nearest Neighbors</p>
+        <img src="images/eltonjohnbiA2.jpg" alt="Description" class="photo">
+        <p class="caption-small">Elton John Rectified Bilinear</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/flower.jpg" alt="Description" class="photo-small">
+            </div>
+        </div>
+        <img src="images/flowernnA2.jpg" alt="Description" class="photo">
+        <p class="caption-small">Flower Rectified Nearest Neighbors</p>
+        <img src="images/flowerbiA2.jpg" alt="Description" class="photo">
+        <p class="caption-small">Flower Rectified Bilinear</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/music.jpg" alt="Description" class="photo-small">
+            </div>
+        </div>
+        <img src="images/musicnnA2.jpg" alt="Description" class="photo">
+        <p class="caption-small">Sheet Music Rectified Nearest Neighbors</p>
+        <img src="images/musicbiA2.jpg" alt="Description" class="photo">
+        <p class="caption-small">Sheet Music Rectified Bilinear</p>
+    </div>
+    <div class="section-gallery">
+        <h2>Part A.4</h2>
+        <p>
+            For blending two images together after warping one image to fit the correspondences of the other, I use a simple but effective method of horizontal weighted averaging 
+            with a mask gradient from the left to the right. From my tests on the same mosaics with different masking and blending procedures, I found that this method, although lacking significant vertical blending 
+            was effective at bridging the common areas in both images, as I only started the gradient from the leftmost correspondence point and ended the gradient at the rightmost correspondence point. 
+            This meant that anything to the left of the gradient is populated purely by the left image and anything to the right of the gradient was populated purely by the right image, delegating potential ghosting to only 
+            the shared common area defined within the horizontal bounds of the correspondence points. This method worked better than the center alpha masking and gaussian blending, which either introduced significant visual artifacts 
+            even with precise correspondence point accuracy, blurring where there shouldn't be, or took 5 times as long to run for the blending, even with only 2 layers. To me, I've found that this simple method, in combination 
+            with precise correspondence between the two images, led to the least visual artifacting and best results. The most challenging part about any procedure, though, was establishing good correspondences with a large number of correspondence points.
+        </p>
+        <p style="text-align: center;">Mosaic Results</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/livingroomleft1.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Left of my Living room shot on an Iphone at 2x zoom</p>
+            </div>
+            <div class="image-container">
+                <img src="images/livingroomright1.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Right of my living room</p>
+            </div>
+        </div>
+        <img src="images/livingroomcorrespondencesA2.jpg" alt="Description" class="photo">
+        <p class="caption-small">Using 10 correspondences</p>
+        <img src="images/naivehorizontalbestresultA4.jpg" alt="Description" class="photo">
+        <p class="caption-small">Using horizontal weighted averaging</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/left.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Left of my living room <br> 1x zoom</p>
+            </div>
+            <div class="image-container">
+                <img src="images/mid.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Middle of my living room</p>
+            </div>
+            <div class="image-container">
+                <img src="images/right.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Right of my living room</p>
+            </div>
+        </div>
+        <img src="images/leftmidcorrespondenceA4.jpg" alt="Description" class="photo">
+        <p class="caption-small">Left and middle living room correspondences</p>
+        <img src="images/midrightcorrespondenceA4.jpg" alt="Description" class="photo">
+        <p class="caption-small">Middle and right living room correspondences</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/mosaic.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Mosaic Pt 1</p>
+            </div>
+            <div class="image-container">
+                <img src="images/mosaic2.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Mosaic Pt 2</p>
+            </div>
+        </div>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/leftkitchen.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Left of my kitchen shot on an Iphone at 2x zoom</p>
+            </div>
+            <div class="image-container">
+                <img src="images/rightkitchen.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Right of my kitchen</p>
+            </div>
+        </div>
+        <img src="images/kitchencorrespondenceA4.jpg" alt="Description" class="photo">
+        <img src="images/kitchenmosaicA4.jpg" alt="Description" class="photo">
+        <p class="caption-small">Result with horizontal weighted averaging</p>
+    </div>
+    <div class="section-gallery">
+        <h2>Part B.1</h2>
+        <p>
+            I started by computing the Harris corner strength values of each pixel in the image along with a list of candidate coordinate points I could start with and eventually refine to a list of optimal 
+            correspondences. I set a threshold value of 0.3 to eliminate any candidates that didn't have a strong enough Harris corner strength value and then sorted the remaining points by Harris corner value 
+            descending, selecting the top 300 candidates for regular Harris corner detection. I then applied ANMS on candidate points that had a Harris value above the threshold of 0.3 
+            with a c_robust value of 0.9 as described in the paper “Multi-Image Matching using Multi-Scale Oriented Patches” by Brown et al. This yielded candidate points that were significantly sparser and more spread out 
+            ideal for correspondences of optimal homographies.
+        </p>
+        <img src="imagesB/B1.jpg" alt="Description" class="photo">
+        <p class="caption-small">Comparison between no use of ANMS and use of ANMS</p>
+    </div>
+    <div class="section-gallery">
+        <h2>Part B.2</h2>
+        <p>
+            For this part, I implemented section 5 of the paper describing feature extraction of each point of interest resulting from the ANMS step from part B.1. I extracted 8x8 patches subsampled evenly 
+            from a larger 40x40 patch of pixels surrounding each point of interest oriented along the same direction as the gradient vector at the point. I then bias/gain-normalized these patches such that 
+            the mean of each normalized patch was 0 and has a standard deviation of 1 as described in the paper. With these rotation and scale invariant patches of each feature, I was able to complete the next 
+            step of feature matching across different features of interest in corresponding images optimally. Some of the features below can be clearly identified as corners or edges, and others seem to be bad features 
+            due to patch that doesn't seem to match either a line or a corner.
+        </p>
+        <p style="text-align: center;">Features</p>
+        <img src="images/livingroomleft1.jpg" alt="Description" class="photo">
+        <p class="caption-small">Source image for feature extraction</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="imagesB/feature1.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Feature 1<br>Source point: (331, 2527)</p>
+            </div>
+            <div class="image-container">
+                <img src="imagesB/feature2.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Feature 2<br>Source point: (1719, 3367)</p>
+            </div>
+            <div class="image-container">
+                <img src="imagesB/feature3.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Feature 3<br>Source point: (1159, 625)</p>
+            </div>
+            <div class="image-container">
+                <img src="imagesB/feature4.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Feature 4<br>Source point: (1498, 3154)</p>
+            </div>
+            <div class="image-container">
+                <img src="imagesB/feature5.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Feature 5<br>Source point: (2346, 454)</p>
+            </div>
+            <div class="image-container">
+                <img src="imagesB/feature6.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Feature 6<br>Source point: (2346, 457)</p>
+            </div>
+            <div class="image-container">
+                <img src="imagesB/feature7.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Feature 7<br>Source point: (35, 3653)</p>
+            </div>
+            <div class="image-container">
+                <img src="imagesB/feature8.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Feature 8<br>Source point: (2330, 2435)</p>
+            </div>
+            <div class="image-container">
+                <img src="imagesB/feature9.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Feature 9<br>Source point: (1313, 2190)</p>
+            </div>
+            <div class="image-container">
+                <img src="imagesB/feature10.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Feature 10<br>Source point: (2846, 3967)</p>
+            </div>
+        </div>
+    </div>
+    <div class="section-gallery">
+        <h2>Part B.3</h2>
+        <p>
+            For this part, I chose a Lowe's threshold that balanced 1-NN/2-NN squared error values for correct matches and incorrect matches: 0.7-0.8. The reason why I opted for higher values of the Lowe's threshold was 
+            that while lower values would lead to higher quality correspondences, lowering the value too far could weed out potentially optimal or sufficient correspondences too fast, filtering out candidates that could 
+            have led to a better homography post-RANSAC. Since RANSAC does an effective job at filtering correspondences especially when given a large number of potential correspondences where a majority of the correspondences 
+            are potentially good. Using this Lowe's threshold, for each pair of features I calculated both the nearest neighbor and second nearest neighbor in terms of L2 distance and stacked the distances into a ratio. If 
+            this ratio was smaller than the Lowe's threshold value then this feature would be an ideal matching. Below is a collection of a few features matched between two images based on the patches of the candidate points of interest.
+        </p>
+        <p style="text-align: center;">Feature Matching Results</p>
+        <img src="imagesB/matchingfeatures1_B3.jpg" alt="Description" class="photo">
+        <div class="images">
+            <div class="image-container">
+                <img src="imagesB/featurematch11.jpg" class="photo-mid">
+            </div>
+            <div class="image-container">
+                <img src="imagesB/featurematch12.jpg" class="photo-mid">
+            </div>
+            <div class="image-container">
+                <img src="imagesB/featurematch13.jpg" class="photo-mid">
+            </div>
+            <div class="image-container">
+                <img src="imagesB/featurematch14.jpg" class="photo-mid">
+            </div>
+        </div>
+        <img src="imagesB/featurematches2_B3.jpg" alt="Description" class="photo">
+        <div class="images">
+            <div class="image-container">
+                <img src="imagesB/featurematch21.jpg" class="photo-mid">
+            </div>
+            <div class="image-container">
+                <img src="imagesB/featurematch22.jpg" class="photo-mid">
+            </div>
+            <div class="image-container">
+                <img src="imagesB/featurematch23.jpg" class="photo-mid">
+            </div>
+            <div class="image-container">
+                <img src="imagesB/featurematch24.jpg" class="photo-mid">
+            </div>
+        </div>
+        <img src="imagesB/featurematches3_B3.jpg" alt="Description" class="photo">
+        <div class="images">
+            <div class="image-container">
+                <img src="imagesB/featurematch31.jpg" class="photo-mid">
+            </div>
+            <div class="image-container">
+                <img src="imagesB/featurematch32.jpg" class="photo-mid">
+            </div>
+            <div class="image-container">
+                <img src="imagesB/featurematch33.jpg" class="photo-mid">
+            </div>
+            <div class="image-container">
+                <img src="imagesB/featurematch34.jpg" class="photo-mid">
+            </div>
+        </div>
+        <img src="imagesB/featurematches4_B3.jpg" alt="Description" class="photo">
+        <div class="images">
+            <div class="image-container">
+                <img src="imagesB/featurematch41.jpg" class="photo-mid">
+            </div>
+            <div class="image-container">
+                <img src="imagesB/featurematch42.jpg" class="photo-mid">
+            </div>
+            <div class="image-container">
+                <img src="imagesB/featurematch43.jpg" class="photo-mid">
+            </div>
+            <div class="image-container">
+                <img src="imagesB/featurematch44.jpg" class="photo-mid">
+            </div>
+        </div>
+    </div>
+    <div class="section-gallery">
+        <h2>Part B.4</h2>
+        <p>
+            For blending two images together automatically after warping one image to fit the correspondences of the other, I changed my strategy from a naive horizontal blend to a more effective gaussian pyramid blending with a dynamic mask.
+            After implementing RANSAC with 1000 iterations to find the greatest number of inliers that satisfy homographies computed from randomly samples of 4 feature correspondences on average, I randomly selected 12 of the features to create 
+            the final homography that I would use to stitch the two images together. I also added functionality for warping an image and stitching it to a second image not only from left to right, but also for the reverse process, where the right image 
+            has the inverse homography applied to it and then it is stiched to the left image. I didn't have this functionality for the first part of the project, which led to a very one-side distorted panorama, apparent in the second example below.
+            
+            The implementation of a Laplacian pyramid meant that potential ghosting was mitigated, and while artifacts are still occasionally apparent, my Laplacian pyramid effectively reduced the number of such ghosts. It also significantly increased performance 
+            compared to the use of a Laplacian stack at the same number of levels: 4. These changes in implementation and design in stitching images have led to significantly improved results, apparent below.
+        </p>
+        <p style="text-align: center;">Mosaic Results</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/livingroomleft1.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Left of my Living room shot on an Iphone at 2x zoom</p>
+            </div>
+            <div class="image-container">
+                <img src="images/livingroomright1.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Right of my living room</p>
+            </div>
+        </div>
+        <img src="images/naivehorizontalbestresultA4.jpg" alt="Description" class="photo">
+        <p class="caption-small">Using horizontal weighted averaging</p>
+        <img src="imagesB/multibandmosaicB4.jpg" class="photo">
+        <p class="caption-small">Automatically Stitched</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/left.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Left of my living room <br> 1x zoom</p>
+            </div>
+            <div class="image-container">
+                <img src="images/mid.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Middle of my living room</p>
+            </div>
+            <div class="image-container">
+                <img src="images/right.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Right of my living room</p>
+            </div>
+        </div>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/mosaic2.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Hand Stitched Mosaic</p>
+            </div>
+            <div class="image-container">
+                <img src="imagesB/livingroompano.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Automatically Stiched Mosaic</p>
+            </div>
+        </div>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/leftkitchen.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Left of my kitchen shot on an Iphone at 2x zoom</p>
+            </div>
+            <div class="image-container">
+                <img src="images/rightkitchen.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">Right of my kitchen</p>
+            </div>
+        </div>
+        <img src="images/kitchenmosaicA4.jpg" alt="Description" class="photo">
+        <p class="caption-small">Manual</p>
+        <img src="imagesB/kitchenmosaic.jpg" alt="Description" class="photo">
+        <p class="caption-small">Automatic</p>
+    </div>
+</body>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+ <title>Dark Poole</title>
+ <link href="/atom.xml" rel="self"/>
+ <link href="http://localhost:4000/"/>
+ <updated>2025-11-21T01:10:41-08:00</updated>
+ <id>http://localhost:4000</id>
+ <author>
+   <name>Mark Otto</name>
+   <email>markdotto@gmail.com</email>
+ </author>
+
+ 
+
+</feed>

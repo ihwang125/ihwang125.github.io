@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 2: Fun with Filters and Frequencies</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        h2 {
+            text-align: center;
+        }
+        
+        .section, .section-gallery {
+            background-color: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 1000px;
+        }
+
+        /* .section-gallery {
+            text-align: center;
+        } */
+
+        .section-gallery h2 {
+            margin-bottom: 20px;
+        }
+
+        .section-gallery .images {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .photo, .gif {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .placeholder-image {
+            width: 400px;
+            height: 300px;
+            background-color: #ddd;
+            border: 2px dashed #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px auto;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .image-container {
+            width: 360px;
+        }
+
+        .image-container2 {
+            width: 240px;
+        }
+        
+        .caption {
+            color: #666;
+            font-style: italic;
+            font-size: 16px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .caption-small {
+            color: #666;
+            font-style: italic;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .image-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .photo-small, .gif-small {
+            width: 180px;
+            height: auto;
+            border-radius: 5px;
+        }
+
+        .photo-mid {
+            width: 360px;
+            height: auto;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Project 2: Fun with Filters and Frequencies</h1>
+    
+    <div class="section-gallery">
+        <h2>Part 1.1</h2>
+        <p>I implemented a 2D convolution algorithm using two for loops and the appropriate amount of padding, 
+            which I filled the padding with zeros to keep the image the same size and to account for boundaries. I compared this with the built in 
+            convolution function by replacing the calls to my function with <code>scipy.signal.convolve2d</code>. However, 
+            given my naive approach to 2D convolutions with a double loop, increasing the filter size yielded substantially longer and longer times, 
+            and from runtime analysis with two for loops the runtime is at least O(n ** 2) for my algorithm, which is quite slow 
+            compared to the built in scipy version. 
+
+            The following is my original code:
+        </p>
+        <pre>
+        <code>
+            im = plt.imread('./images/isaachwang.jpeg')
+            im = sk.color.rgb2gray(im)
+            im = ImageHandler(image=im)
+
+            im.display()
+
+            boxed_result = im.box_filter(color=False)
+            plt.imshow(boxed_result, cmap='gray')
+            plt.show()
+
+            dx = np.array([[1, 0, -1]])
+            dy = np.array([[1], [0], [-1]])
+
+            dx_result = im.convolve_2d(dx, same=True)
+            dy_result = im.convolve_2d(dy, same=True)
+
+            plt.imshow(dx_result, cmap='gray')
+            plt.show()
+
+            plt.imshow(dy_result, cmap='gray')
+            plt.show()
+        </code>
+        </pre>
+        <p>Replacing my built-in convolution function with the scipy convolution function:</p>
+        <pre>
+        <code>
+            im = plt.imread('./images/isaachwang.jpeg')
+            im = sk.color.rgb2gray(im)
+
+            plt.imshow(im, cmap='gray')
+            plt.show()
+
+            box_filter = 1 / 9 * np.ones((3, 3))
+            dx = np.array([[1, 0, -1]])
+            dy = np.array([[1], [0], [-1]])
+
+            box_result = scipy.signal.convolve2d(im, box_filter, mode='same')
+            dx_result = scipy.signal.convolve2d(im, dx, mode='same')
+            dy_result = scipy.signal.convolve2d(im, dy, mode='same')
+
+            plt.imshow(dx_result, cmap='gray')
+            plt.show()
+
+            plt.imshow(dy_result, cmap='gray')
+            plt.show()
+
+            plt.imshow(box_result, cmap='gray')
+            plt.show()
+        </code>
+        </pre>
+        <p>The class constructor and relevant methods:</p>
+        <pre>
+        <code>
+            class ImageHandler:
+                def __init__(self, image_name=None, image=None):
+                    if image_name:
+                        im = skio.imread(image_name) 
+                        im = sk.img_as_float(im)
+                        self.image = im
+                    else:
+                        self.image = image
+
+                def convolve_2d(self, kernel, stride=1, same=True, padding=((0, 0), (0, 0))):
+                    '''
+                    Secondary convolution function for handling the convolution operation on 2d images
+                    Input: 
+                    - kernel: A kernel of arbitrary shape
+                    - stride: default 1
+                    - same: boolean default to true, to keep output shape the same as input shape
+                    - padding: default ((0, 0), (0, 0)) Defines
+                                padding added to the image for each of the four directions
+                    Output:
+                    - res: Output image after kernel applied to base image
+                    '''
+                    # Flip kernel
+                    kernel = np.flip(kernel)
+                    k, w = kernel.shape
+
+                    if same:
+                        padding = ((math.floor((k - 1) / 2), math.ceil((k - 1)/ 2)), (math.floor((w - 1) / 2), math.ceil((w - 1) / 2)))
+
+                    # Initialize with padding
+                    a, b = self.image.shape
+                    base = np.pad(self.image, padding, 'constant', constant_values=0)
+
+                    res = []
+
+                    for i in range(0, a + padding[0][0] + padding[0][1] - k + 1, stride):
+                        row = np.array([])
+                        for j in range(0, b + padding[1][0] + padding[1][1] - w + 1, stride):
+                            row = np.append(row, base[i:i+k, j:j+w].flatten() @ kernel.flatten())
+                        
+                        res.append(row)
+
+                    return res
+
+                def box_filter(self, color=True):
+                    # Create the box filter
+                    box = 1/9 * np.ones((3, 3))
+
+                    if color:
+                        blurred = self.convolve_color(box, same=True)
+                    else:
+                        blurred = self.convolve_2d(box, same=True)
+                    
+                    return blurred
+        </code>
+        </pre>
+        <p style="text-align: center;">Here are the results</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/11/selfportraitgrayscale11.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">The original self portrait</p>
+            </div>
+            <div class="image-container">
+                <img src="images/11/selfportraitgrayscaleboxfilter11.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">The 9x9 box filter with my convolution function</p>
+            </div>
+            <div class="image-container">
+                <img src="images/11/boxscipy11.jpg" class="photo-mid">
+                <p class="caption-small">The 9x9 box filter with scipy convolution</p>
+            </div>
+            <div class="image-container">
+                <img src="images/11/selfportraitdxresult11.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">The result of applying the dx filter with my function</p>
+            </div>
+            <div class="image-container">
+                <img src="images/11/dxscipy11.jpg" class="photo-mid">
+                <p class="caption-small">The result of applying the dx filter with scipy convolution</p>
+            </div>
+            <div class="image-container">
+                <img src="images/11/selfportraitdyresult.jpg" alt="Description" class="photo-mid">
+                <p class="caption-small">The result of applying the dy filter with my function</p>
+            </div>
+            <div class="image-container">
+                <img src="images/11/dyscipy11.jpg" class="photo-mid">
+                <p class="caption-small">The result of applying the dy filter with scipy convolution</p>
+            </div>
+        </div>
+    </div>
+    <div class="section-gallery">
+        <h2>Part 1.2</h2>
+        <p>For this task, I took the cameraman image and convolved the image with the finite different operators D_x and D_y.
+             With these results, I computed the gradient magnitude image, and turned it into an edge image by binarizing the image 
+             with a threshold of 0.4, which I found to be the best balance to capture the edges but minimize noise. Any lower, and I 
+             I captrured too much noise. Any higher, and I lost vital edge information. I then compared this with the 
+             results using the built in <code>scipy.signal.convolve2d</code> function.
+        </p>
+        <br>
+        <p>Here is the code segment I used for this task:</p>
+        <pre>
+        <code>
+            im = plt.imread('./images/cameraman.jpg')
+            im = np.dstack([im[:,:,0], im[:,:,1], im[:,:,2]])
+            im = sk.color.rgb2gray(im)
+            im = ImageHandler(image=im)
+
+            im.display()
+
+            dx = np.array([[1, 0, -1]])
+            dy = np.array([[1], [0], [-1]])
+
+            dx_result = im.convolve_2d(dx, same=True)
+            dy_result = im.convolve_2d(dy, same=True)
+
+            plt.imshow(dx_result, cmap='gray')
+            plt.show()
+
+            plt.imshow(dy_result, cmap='gray')
+            plt.show()
+
+            d_result = np.sqrt(dx_result ** 2 + dy_result ** 2)
+
+            plt.imshow(d_result, cmap='gray')
+            plt.show()
+            # Binarize with a threshold of 0.4
+            d_result = d_result >= 0.4
+            plt.imshow(d_result, cmap='gray')
+            plt.show()
+        </code>
+        </pre>
+        <p>
+            Replacing the use of my ImageHandler class with the <code>scipy.signal.convolve2d</code> function:
+        </p>
+        <pre>
+        <code>
+            im = plt.imread('./images/cameraman.jpg')
+            im = np.dstack([im[:,:,0], im[:,:,1], im[:,:,2]])
+            im = sk.color.rgb2gray(im)
+
+            dx = np.array([[1, 0, -1]])
+            dy = np.array([[1], [0], [-1]])
+
+            dx_result = scipy.signal.convolve2d(im, dx, mode='same')
+            dy_result = scipy.signal.convolve2d(im, dy, mode='same')
+
+            plt.imshow(dx_result, cmap='gray')
+            plt.show()
+
+            plt.imshow(dy_result, cmap='gray')
+            plt.show()
+
+            d_result = np.sqrt(dx_result ** 2 + dy_result ** 2)
+            plt.imshow(d_result, cmap='gray')
+            plt.show()
+            # Binarize with a threshold of 0.4
+            d_result = d_result >= 0.4
+            plt.imshow(d_result, cmap='gray')
+            plt.show()
+        </code>
+        </pre>
+        <p style="text-align: center;">Results</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/12/cameraman.jpg" class="photo">
+                <p class="caption-small">The original image</p>
+            </div>
+        </div>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/12/cameramandx12.jpg" class="photo-mid">
+                <p class="caption-small">The dx result with my convolution function</p>
+            </div>
+            <div class="image-container">
+                <img src="images/12/scipy12dx.jpg" class="photo-mid">
+                <p class="caption-small">The dx result with the scipy convolution function</p>
+            </div>
+            <div class="image-container">
+                <img src="images/12/cameramandy12.jpg" class="photo-mid">
+                <p class="caption-small">The dy result with my function</p>
+            </div>
+            <div class="image-container">
+                <img src="images/12/dyscipy12.jpg" class="photo-mid">
+                <p class="caption-small">The dy result with scipy function</p>
+            </div>
+            <div class="image-container">
+                <img src="images/12/dxygradientpart12.jpg" class="photo-mid">
+                <p class="caption-small">The gradient result with my function</p>
+            </div>
+            <div class="image-container">
+                <img src="images/12/dxygradientpart12.jpg" class="photo-mid">
+                <p class="caption-small">The gradient result with scipy function</p>
+            </div>
+            <div class="image-container">
+                <img src="images/12/cameramanbinarized12.jpg" class="photo-mid">
+                <p class="caption-small">The binarized gradient using my function</p>
+            </div>
+            <div class="image-container">
+                <img src="images/12/binarizescipy12.jpg" class="photo-mid">
+                <p class="caption-small">The binarized gradient using scipy function</p>
+            </div>
+        </div>
+    </div>
+    <div class="section-gallery">
+        <h2>Part 1.3</h2>
+        <p>To get the blurred image, I used a gaussian filter with sigma = 2 and a filter size of 13:</p>
+        <pre>
+            <code>
+                im = plt.imread('./images/cameraman.jpg')
+                im = np.dstack([im[:,:,0], im[:,:,1], im[:,:,2]])
+                im = sk.color.rgb2gray(im)
+                im = ImageHandler(image=im)
+
+                sigma = 2
+                size = 6 * 2 + 1
+
+                gaussian_kernel_1d = cv2.getGaussianKernel(size, sigma)
+                gaussian_kernel_2d = gaussian_kernel_1d @ gaussian_kernel_1d.T
+
+                res = im.convolve_2d(gaussian_kernel_2d, same=True)
+
+                plt.imshow(res, cmap='gray')
+                plt.show()
+            </code>
+        </pre>
+        <div class="images">
+            <img src="images/13/cameraman_blurred13.jpg" class="photo">
+        </div>
+        <p style="text-align: center;" class="caption">Blurred cameraman</p>
+        <br>
+        <p>I then applied the code from part 1.2 on the blurred image to get the results below. For the binarized image, I used a threshold of 0.4</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/13/cameramandx13.jpg" class="photo-mid">
+                <p class="caption-small">DX finite difference filter applied</p>
+            </div>
+            <div class="image-container">
+                <img src="images/13/cameramandy13.jpg" class="photo-mid">
+                <p class="caption-small">DY finite difference filter applied</p>
+            </div>
+            <div class="image-container">
+                <img src="images/13/cameramangradient13.jpg" class="photo-mid">
+                <p class="caption-small">Gradient Magnitude</p>
+            </div>
+            <div class="image-container">
+                <img src="images/13/cameramanblurredgradientbinarized13.jpg" class="photo-mid">
+                <p class="caption-small">Gradient Magnitude image binarized <br> Threshold: 0.4</p>
+            </div>
+        </div>
+        <p>
+            This is in contrast to using the DoG filter, for which I used the following code snippet to apply the convolutions of the filters and then apply the final DoG filter on the cameraman image. 
+            This time the binarized threshold worked out to be better at 0.15. Compared to the original results from the finite difference method, this method yielded comparable results with lower operation count. 
+            It also seems to perform quite well on capturing image edges while blocking noise out.
+        </p>
+        <pre>
+        <code>
+            gaussian_kernel_1d = cv2.getGaussianKernel(13, 2)
+            gaussian_kernel_2d = gaussian_kernel_1d @ gaussian_kernel_1d.T
+            x_diff = np.array([[1, 0, -1]])
+            y_diff = np.array([[1], [0], [-1]])
+
+            gaussian_image = ImageHandler(image=gaussian_kernel_2d)
+            im = plt.imread('./images/cameraman.jpg')
+            im = np.dstack([im[:,:,0], im[:,:,1], im[:,:,2]])
+            im = sk.color.rgb2gray(im)
+            image = ImageHandler(image=im)
+
+            # Create DoG filters and apply to original image
+            dog_x = gaussian_image.convolve_2d(x_diff)
+            dog_y = gaussian_image.convolve_2d(y_diff)
+
+            plt.imshow(dog_x, cmap='gray')
+            plt.show()
+
+            plt.imshow(dog_y, cmap='gray')
+            plt.show()
+
+            # Apply DoG filters to original image
+            partial_x_dog = image.convolve_2d(dog_x)
+            partial_y_dog = image.convolve_2d(dog_y)
+
+            dog_applied = np.sqrt(partial_x_dog**2 + partial_y_dog**2)
+            plt.imshow(dog_applied, cmap='gray')
+            plt.show()
+
+            dog_applied = dog_applied >= 0.15
+            plt.imshow(dog_applied, cmap='gray')
+            plt.show()
+        </code>
+        <p style="text-align: center;">Results</p>
+        </pre>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/13/dxog13b.jpg" class="photo-mid">
+                <p class="caption-small">DX filter convolved on Gaussian filter</p>
+            </div>
+            <div class="image-container">
+                <img src="images/13/dyog13b.jpg" class="photo-mid">
+                <p class="caption-small">DY filter convolved on Gaussian filter</p>
+            </div>
+        </div>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/13/dxyoggradient13b.jpg" class="photo">
+                <p class="caption-small">Result of the magnitude of DoG filters applied on cameraman.jpg</p>
+            </div>
+        </div>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/13/dogbinarized13b.jpg" class="photo">
+                <p class="caption-small">Binarized Version <br> Threshold: 0.15</p>
+            </div>
+        </div>
+    </div>
+    <div class="section-gallery">
+        <h2>Part 2.1</h2>
+        <p>
+            For this section, I got the high frequencies of the image by applying a low-pass Gaussian filter of sigma=2 and size 13x13 to obtain blurred images. 
+            I then subtracted the blurred images from their original images to obtain all the high frequencies. I then added these high frequencies back to the original images, 
+            and then displayed the resulting "sharper" images. However, instead of having an additional operation to not only apply a filter to the image but also subtract 
+            the blurred image from the original image to get the high frequency, and then adding it back to the original image. We can just combine it into one convolution by first applying 
+            these operations to the identity filter, which is simply just 1 in the center surrounded by zeros, and the gaussian filter, which we can vary to increase the blurring effect. These ingredients 
+            lead to the derivation of the unsharp filter.
+
+            To achieve the goal of this assignment, I combined these steps into a single convolution on an "unsharp" filter: which can be derived from the fact that the sharp image is the result of the original image + alpha * (original image - guassian blurred image) = 2 x I_original - g * I_original = 
+            (2 x identity - g) * I_original, where '*' is the convolve operation and 'x' is scalar multiplication, and alpha is the variable that controls the relative amount of high frequencies we 
+            add back to the original image. So with simplification, the "unsharp" filter can be defined as (1 + alpha) times the identity filter minus alpha times the 
+            gaussian filter.
+        </p>
+        <p style="text-align: center;">Code Snippet</p>
+        <pre>
+        <code>
+            '''
+            The convolve_color function in my ImageHandler class
+            
+            def convolve_color(self, kernel, stride=1, same=True, padding=((0, 0), (0, 0))):
+                '''
+                Main convolution function for handling the convolution operation on color images
+                Input: 
+                - kernel: A kernel of arbitrary shape
+                - stride: default 1
+                - same: boolean default to true, to keep output shape the same as input shape
+                - padding: default ((0, 0), (0, 0)) Defines
+                            padding added to the image for each of the four directions
+                Output:
+                - res: Output image after kernel applied to base image
+                '''
+                # Flip kernel
+                kernel = np.flip(kernel)
+                k, w = kernel.shape
+
+                if same:
+                    padding = ((math.floor((k - 1) / 2), math.ceil((k - 1)/ 2)), (math.floor((w - 1) / 2), math.ceil((w - 1) / 2)))
+
+                # Initialize with padding
+                a, b = self.image[:, :, 0].shape
+                base_channel_r = np.pad(self.image[:, :, 0], padding, 'constant', constant_values=0)
+                base_channel_g = np.pad(self.image[:, :, 1], padding, 'constant', constant_values=0)
+                base_channel_b = np.pad(self.image[:, :, 2], padding, 'constant', constant_values=0)
+
+                base = np.dstack([base_channel_r, base_channel_g, base_channel_b])
+
+                # Initialize empty res channels
+                res_r = []
+                res_g = []
+                res_b = []
+
+                for i in range(0, a + padding[0][0] + padding[0][1] - k + 1, stride):
+                    r_channel = np.array([])
+                    g_channel = np.array([])
+                    b_channel = np.array([])
+                    for j in range(0, b + padding[1][0] + padding[1][1] - w + 1, stride):
+                        r_channel = np.append(r_channel, base[i:i+k, j:j+w, 0].flatten() @ kernel.flatten())
+                        g_channel = np.append(g_channel, base[i:i+k, j:j+w, 1].flatten() @ kernel.flatten())
+                        b_channel = np.append(b_channel, base[i:i+k, j:j+w, 2].flatten() @ kernel.flatten())
+                    
+                    res_r.append(r_channel)
+                    res_g.append(g_channel)
+                    res_b.append(b_channel)
+                
+                res = np.dstack([res_r, res_g, res_b])
+
+                return res
+            '''
+
+            # Actual Code Snippet
+            im1 = plt.imread('./images/blurred.jpg')
+            im2 = plt.imread('./images/lion.jpg')
+
+            # Enforce 3 channels
+            im1 = np.dstack([im1[:,:,0], im1[:,:,1], im1[:,:,2]])
+            im2 = np.dstack([im2[:,:,0], im2[:,:,1], im2[:,:,2]])
+
+            # Force images to between 0 and 1
+            im1 = im1 / np.max(np.abs(im1))
+            im2 = im2 / np.max(np.abs(im2))
+
+            im1 = (im1 - np.min(im1)) / (np.max(im1) - np.min(im1))
+            im2 = (im2 - np.min(im2)) / (np.max(im2) - np.min(im2))
+
+            im2 = ImageHandler(image=im2)
+            im1 = ImageHandler(image=im1)
+            # Show original lion.jpg
+            im2.display()
+
+            # Define Gaussian filter
+            sigma = 3
+            size = 6 * sigma + 1
+
+            gaussian_kernel_1d = cv2.getGaussianKernel(size, sigma)
+            gaussian_kernel_2d = gaussian_kernel_1d @ gaussian_kernel_1d.T
+
+            # Blur the lion image
+            im2 = ImageHandler(image=im2.gaussian_applied(sigma, True, size))
+            # Display blurred image
+            im2.display()
+
+            # Display Taj Mahal Blurred and High Freq
+            tajmahal_blurred = im1.convolve_color(gaussian_kernel_2d, same=True)
+            plt.imshow(tajmahal_blurred)
+            plt.show()
+
+            tajmahal_highfreq = im1.get_image() - tajmahal_blurred
+            plt.imshow(tajmahal_highfreq)
+            plt.show()
+
+            # Display Lion High Freq
+            lion_highfreq = im2.convolve_color(gaussian_kernel_2d, same=True)
+            plt.imshow(lion_highfreq)
+            plt.show()
+            lion_highfreq = im2.get_image() - lion_highfreq
+            plt.imshow(lion_highfreq)
+            plt.show()
+
+            # Define the identity filter
+            identity = np.zeros((size, size))
+            identity[6, 6] = 1
+
+            # Define sharpening variable and define unsharp filter with identity and Gaussian
+            alpha = 1
+            unsharp_mid = (1 + alpha) * identity - alpha * gaussian_kernel_2d
+
+            alpha = 0.5
+            unsharp_low = (1 + alpha) * identity - alpha * gaussian_kernel_2d
+
+            alpha = 2
+            unsharp_high = (1 + alpha) * identity - alpha * gaussian_kernel_2d
+
+            # Apply sharpening in one convolution step
+            sharp_mid_im1 = np.clip(im1.convolve_color(unsharp_mid, same=True), 0, 1)
+            sharp_mid_im2 = np.clip(im2.convolve_color(unsharp_mid, same=True), 0, 1)
+            sharp_low_im1 = np.clip(im1.convolve_color(unsharp_low, same=True), 0, 1)
+            sharp_low_im2 = np.clip(im2.convolve_color(unsharp_low, same=True), 0, 1)
+            sharp_high_im1 = np.clip(im1.convolve_color(unsharp_high, same=True), 0, 1)
+            sharp_high_im2 = np.clip(im2.convolve_color(unsharp_high, same=True), 0, 1)
+
+            plt.imshow(sharp_low_im1)
+            plt.show()
+
+            plt.imshow(sharp_low_im2)
+            plt.show()
+
+            plt.imshow(sharp_mid_im1)
+            plt.show()
+
+            plt.imshow(sharp_mid_im2)
+            plt.show()
+
+            plt.imshow(sharp_high_im1)
+            plt.show()
+
+            plt.imshow(sharp_high_im2)
+            plt.show()
+        </code>
+        </pre>
+        <p style="text-align: center;">Results</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/21/blurred21.jpg" class="photo-mid">
+                <p class="caption-small">The blurred Taj Mahal</p>
+            </div>
+            <div class="image-container">
+                <img src="images/21/blurredtaj_mahal.jpg" class="photo-mid">
+                <p class="caption-small">The Gaussian filter applied to the Taj Mahal</p>
+            </div>
+            <div class="image-container">
+                <img src="images/21/highfreqtajmahal.jpg" class="photo-mid">
+                <p class="caption-small">The high frequencies of the Taj Mahal</p>
+            </div>
+            <div class="image-container">
+                <img src="images/21/unsharp21.jpg" class="photo-mid">
+                <p class="caption-small">Taj Mahal unsharped <br> alpha=1</p>
+            </div>
+            <div class="image-container">
+                <img src="images/21/lowsharptajmahal.jpg" class="photo-mid">
+                <p class="caption-small">Taj Mahal unsharped <br> alpha=0.5</p>
+            </div>
+            <div class="image-container">
+                <img src="images/21/supersharptajmahal.jpg" class="photo-mid">
+                <p class="caption-small">Taj Mahal unsharped <br> alpha=2</p>
+            </div>
+        </div>
+        <p style="text-align: center;">Results on an image of a lion</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/21/lion_original_21.jpg" class="photo-mid">
+                <p class="caption-small">The original lion.jpg</p>
+            </div>
+            <div class="image-container">
+                <img src="images/21/lionblurred21.jpg" class="photo-mid">
+                <p class="caption-small">The blurred lion</p>
+            </div>
+            <div class="image-container">
+                <img src="images/21/lion_superblurred.jpg" class="photo-mid">
+                <p class="caption-small">Gaussian filter applied to blurred lion</p>
+            </div>
+            <div class="image-container">
+                <img src="images/21/highfreqlion.jpg" class="photo-mid">
+                <p class="caption-small">High Frequencies of the lion</p>
+            </div>
+            <div class="image-container">
+                <img src="images/21/unsharplion21.jpg" class="photo-mid">
+                <p class="caption-small">The unsharped lion <br> alpha=1</p>
+            </div>
+            <div class="image-container">
+                <img src="images/21/lowsharplion.jpg" class="photo-mid">
+                <p class="caption-small">The unsharped lion <br> alpha=0.5</p>
+            </div>
+            <div class="image-container">
+                <img src="images/21/supersharplion.jpg" class="photo-mid">
+                <p class="caption-small">The unsharped lion <br> alpha=2</p>
+            </div>
+            <p style="text-align: center;">As you can see, varying alpha amount varies "sharpness"</p>
+        </div>
+    </div>
+    <div class="section-gallery">
+        <h2>Part 2.2</h2>
+        <p style="text-align: center;">
+            For this section, I modified starter alignment function align_images to work better at aligning images, using the skimage transform estimate transform method and the warp function to transform the first image 
+            to align with the second image:
+        </p>
+        <pre>
+        <code>
+            def align_images(im1, im2):
+                # Get 2 corresponding points in each image
+                pts = get_points(im1, im2)  # [(x1,y1), (x2,y2), (x3,y3), (x4,y4)]
+                src_pts = np.array([pts[0], pts[1]]) 
+                dst_pts = np.array([pts[2], pts[3]])  
+                tform = sktr.estimate_transform('similarity', src_pts, dst_pts)
+                im1_aligned = sktr.warp(im1, inverse_map=tform.inverse, output_shape=im2.shape)
+                return im1_aligned, im2
+        </code>
+        </pre>
+        <p>
+            I then defined the two following function to align the input images, align them, and then create a hybrid image. In the process, the code would also 
+            generate the images at each step of the process along with its log magnitude Fourier transform.
+        </p>
+        <p style="text-align: center;">Code Snippet</p>
+        <pre>
+        <code>
+            def hybrid_image(im1, im2, sigma1, sigma2):
+                '''
+                Creates a hybrid image with the two images that are the same size
+                Input:
+                - im1: First image
+                - im2: Second image
+                - sigma1: First cuttoff value
+                - sigma2: Second cutoff value
+                '''
+                plt.imshow(np.log(np.abs(np.fft.fftshift(np.fft.fft2(sk.color.rgb2gray(im1))))))
+                plt.show()
+
+                plt.imshow(np.log(np.abs(np.fft.fftshift(np.fft.fft2(sk.color.rgb2gray(im2))))))
+                plt.show()
+
+                im1 = ImageHandler(image=im1)
+                im2 = ImageHandler(image=im2)
+
+                im1.display()
+                im2.display()
+
+                size1 = 6 * sigma1 + 1 # Because the range from -3 to 3 sigma covers most of the guassian
+                size2 = 6 * sigma2 + 1
+
+                res1, res2 = im1.high_frequency(size=size1, sigma=sigma1), im2.gaussian_applied(size=size2, sigma=sigma2)
+
+                res1 = res1 / np.max(np.abs(res1))
+
+                plt.imshow(np.log(np.abs(np.fft.fftshift(np.fft.fft2(sk.color.rgb2gray(res1))))))
+                plt.show()
+
+                plt.imshow(np.log(np.abs(np.fft.fftshift(np.fft.fft2(sk.color.rgb2gray(res2))))))
+                plt.show()
+
+                # For normalize for the purpose of display
+                disp1 = res1 - np.min(res1) / (np.max(res1) - np.min(res1))
+                disp2 = res2 / np.max(np.abs(res2))
+                disp2 = disp2 - np.min(disp2) / (np.max(disp2) - np.min(disp2))
+
+                plt.imshow(disp1)
+                plt.show()
+
+                plt.imshow(res2)
+                plt.show()
+
+                hybrid = 0.7 * res1 + res2
+                hybrid = hybrid / np.max(np.abs(hybrid))
+
+                result = hybrid
+                disp_result = result - np.min(result) / (np.max(result) - np.min(result))
+                plt.imshow(disp_result)
+                plt.show()
+
+                gray_image = sk.color.rgb2gray(hybrid)
+                plt.imshow(np.log(np.abs(np.fft.fftshift(np.fft.fft2(gray_image)))))
+                plt.show()
+
+            def part22():
+                im1 = plt.imread('./images/DerekPicture.jpg')
+                im2 = plt.imread('./images/nutmeg.jpg')
+
+                im1 = np.dstack([im1[:, :, 0], im1[:, :, 1], im1[:, :, 2]])
+                im2 = np.dstack([im2[:, :, 0], im2[:, :, 1], im2[:, :, 2]])
+
+                im1 = im1 / np.max(np.abs(im1))
+                im2 = im2 / np.max(np.abs(im2))
+
+                im1, im2 = align_images(im2, im1)
+
+                sigma1 = 4
+                sigma2 = 15
+
+                hybrid_image(im1, im2, sigma1, sigma2)
+        </code>
+        </pre>
+        <p style="text-align: center;">
+            I selected my sigma1 and sigma2 to be 4 and 15 because I wanted to extract the highest frequencies from the nutmeg picture and add it to a pretty low-pass version of Derek, to 
+            achieve a visual effect closest to the diagram of the hybrid image shown in the assignment. Selecting high sigma would ensure more blurring whereas selecting lower sigma would ensure 
+            I captured the highest frequencies of the image that I wanted to overlay on the blurred image.
+        </p>
+        <div class="images">
+            <div class="image-container">
+                <img style="width: 200px;" src="images/22/DerekPicture.jpg" class="photo-mid">
+                <p class="caption-small">A photo of Derek</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/DerekAlignedFFT.jpg" class="photo-mid">
+                <p class="caption-small">The FFT of Derek</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/nutmegaligned.jpg" class="photo-mid">
+                <p class="caption-small">A photo of Nutmeg aligned with Derek</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/nutmegalignedFFT.jpg" class="photo-mid">
+                <p class="caption-small">The FFT of Nutmeg aligned</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/derekblurred.jpg" class="photo-mid">
+                <p class="caption-small">The low-pass filter of Derek</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/DerekGaussianFFT.jpg" class="photo-mid">
+                <p class="caption-small">The FFT of low-pass Derek</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/nutmeghighfrequency.jpg" class="photo-mid">
+                <p class="caption-small">The high-pass filter of Nutmeg</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/nutmeghighfreqFFT.jpg" class="photo-mid">
+                <p class="caption-small">The FFT of the high-pass Nutmeg</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/goodcatman.jpg" class="photo-mid">
+                <p class="caption-small">The Hybrid Image</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/hybridFFT.jpg" class="photo-mid">
+                <p class="caption-small">The Hybrid FFT</p>
+            </div>
+        </div>
+        <p>I then applied the code on different pairs of images to create different interesting combinations</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/22/dog.jpg" class="photo-mid">
+                <p class="caption-small">A photo of a dog</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/wolf.jpg" class="photo-mid">
+                <p class="caption-small">A photo of a wolf</p>
+            </div>
+        </div>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/22/dogwolf.jpg" class="photo-mid">
+                <p class="caption-small">A dogwolf</p>
+            </div>
+        </div>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/22/frown.jpg" class="photo-mid">
+                <p class="caption-small">A frown face</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/smile.jpg" class="photo-mid">
+                <p class="caption-small">A smile face</p>
+            </div>
+        </div>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/22/happysmiley.jpg" class="photo-mid">
+                <p class="caption-small">The smiley frowney face</p>
+            </div>
+        </div>
+        <p style="text-align: center;">One of my favorite results</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/22/frame1.jpg" class="photo-mid">
+                <p class="caption-small">First Frame</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/frame2.jpg" class="photo-mid">
+                <p class="caption-small">Second Frame</p>
+            </div>
+        </div>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/22/frames.jpg" class="photo-mid">
+                <p class="caption-small">The Hybrid of the Frames</p>
+            </div>
+        </div>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/22/frame1.jpg" class="photo-mid">
+                <p class="caption-small">Frame 1</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/frame1FFT.jpg" class="photo-mid">
+                <p class="caption-small">Frame 1 FFT</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/frame2.jpg" class="photo-mid">
+                <p class="caption-small">Frame 2</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/Frame2FFT.jpg" class="photo-mid">
+                <p class="caption-small">Frame 2 FFT</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/Frame1HighFreq.jpg" class="photo-mid">
+                <p class="caption-small">Frame 1 High Frequency</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/Frame1HighFreqFFT.jpg" class="photo-mid">
+                <p class="caption-small">Frame 1 High Frequency FFT</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/Frame2LowFreq.jpg" class="photo-mid">
+                <p class="caption-small">Frame 2 Low Frequency</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/Frame2LowFreqFFT.jpg" class="photo-mid">
+                <p class="caption-small">Frame 2 Low Frequency FFT</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/frames.jpg" class="photo-mid">
+                <p class="caption-small">Hybrid Frames</p>
+            </div>
+            <div class="image-container">
+                <img src="images/22/framesFFT.jpg" class="photo-mid">
+                <p class="caption-small">The Hybrid FFT</p>
+            </div>
+        </div>
+    </div>
+    <div class="section-gallery">
+        <h2>Part 2.3</h2>
+        <p>
+            To tackle this section, I applied an initial filter with a set sigma of around 2 or 3, and the size being 6 * sigma + 1. 
+            At each successive level, I doubled the sigma of the filter. I then combined all of the results of the Gaussian filters results into a Gaussian stack.
+             For the Laplacian stack, I used the same function, but for each round, I saved the previous results to use to subtract the current Gaussian result from,
+              to compute the Laplacian. I tried recreating the Figure 3.42 but I found it difficult to get the display exaclty the same. 
+              However, I was able to get my results close enough to the figure.
+        </p>
+        <p style="text-align: center;">Code Snippet</p>
+        <pre>
+        <code>
+            def gaussian_stack(im, record_laplacians=True):
+                # Increase the size of the sigma more and more each time
+                temp_im = im / np.max(np.abs(im)) # Normalize image that comes in
+
+                # Ensure that there are only three channels
+                temp_im = np.dstack([temp_im[:,:,0], temp_im[:,:,1], temp_im[:,:,2]])
+                
+                im = ImageHandler(image=temp_im)
+
+                laplacian_stack = []
+
+                for i in range(5):
+                    # Increasing sigma for a lower pass filter
+                    sigma = 2 * 2 ** i
+                    size = 6 * sigma + 1 # To at least capture 3 sigmas away from mean in all 4 directions and keep it odd to center guassian filter
+
+                    # Creating gaussian kernel and applying it
+                    gaussian_kernel_1d = cv2.getGaussianKernel(size, sigma)
+                    gaussian_kernel_2d = gaussian_kernel_1d @ gaussian_kernel_1d.T
+                    res = im.convolve_color(gaussian_kernel_2d, same=True)
+
+                    # plt.imshow(res)
+                    # plt.show()
+                    print("res: ", i)
+
+                    # Compute the high frequencies
+                    temp = temp_im - res
+                    if record_laplacians:
+                        laplacian_stack.append(temp)
+                    else:
+                        laplacian_stack.append(res)
+
+                    # Normalize only for the purpose of visualization and information preservation
+                    """ disp = temp / np.max(np.abs(temp))
+                    disp = (disp - np.min(disp)) / (np.max(disp) - np.min(disp))
+
+                    plt.imshow(disp)
+                    plt.show() """
+
+                    # Set the new temp_im to res to calculate the next frequency band
+                    temp_im = res
+                
+                laplacian_stack.append(temp_im)
+
+                return laplacian_stack
+
+            def part23():
+                im1 = plt.imread('./images/apple.jpg')
+                im2 = plt.imread('./images/orange.jpg')
+                im3 = plt.imread('./images/oraple.jpg')
+
+                im1 = np.dstack([im1[:, :, 0], im1[:, :, 1], im1[:, :, 2]])
+                im2 = np.dstack([im2[:, :, 0], im2[:, :, 1], im2[:, :, 2]])
+                im3 = np.dstack([im3[:, :, 0], im3[:, :, 1], im3[:, :, 2]])
+
+                im1 = im1 / np.max(np.abs(im1))
+                im2 = im2 / np.max(np.abs(im2))
+                im3 = im3 / np.max(np.abs(im3))
+
+                orange_laplacians = gaussian_stack(im2)
+                apple_laplacians = gaussian_stack(im1)
+                oraple_laplacians = gaussian_stack(im3)
+
+                for orange_k, apple_k, oraple_k in zip(apple_laplacians, orange_laplacians, oraple_laplacians):
+                    apple_k = apple_k / np.max(np.abs(apple_k))
+                    apple_k = (apple_k - np.min(apple_k)) / (np.max(apple_k) - np.min(apple_k))
+                    plt.imshow(apple_k)
+                    plt.show()
+
+                    orange_k = orange_k / np.max(np.abs(orange_k))
+                    orange_k = (orange_k - np.min(orange_k)) / (np.max(orange_k) - np.min(orange_k))
+                    plt.imshow(orange_k)
+                    plt.show()
+
+                    oraple_k = oraple_k / np.max(np.abs(oraple_k))
+                    oraple_k = (oraple_k - np.min(oraple_k)) / (np.max(oraple_k) - np.min(oraple_k))
+                    plt.imshow(oraple_k)
+                    plt.show()
+        </code>
+        </pre>
+        <p style="text-align: center;">Figure</p>
+        <div class="images">
+            <div class="image-container2">
+                <img src="images/23/apple0.jpg" class="photo-small">
+                <p class="caption-small"></p>
+            </div>
+            <div class="image-container2">
+                <img src="images/23/orange0.jpg" class="photo-small">
+                <p class="caption-small"></p>
+            </div>
+            <div class="image-container2">
+                <img src="images/23/oraple0.jpg" class="photo-small">
+                <p class="caption-small"> </p>
+            </div>
+             <div class="image-container2">
+                <img src="images/23/apple2.jpg" class="photo-small">
+                <p class="caption-small"> </p>
+            </div>
+            <div class="image-container2">
+                <img src="images/23/orange2.jpg" class="photo-small">
+                <p class="caption-small"> </p>
+            </div>
+            <div class="image-container2">
+                <img src="images/23/oraple2.jpg" class="photo-small">
+                <p class="caption-small"> </p>
+            </div>
+             <div class="image-container2">
+                <img src="images/23/apple4.jpg" class="photo-small">
+                <p class="caption-small"> </p>
+            </div>
+            <div class="image-container2">
+                <img src="images/23/orange4.jpg" class="photo-small">
+                <p class="caption-small"> </p>
+            </div>
+            <div class="image-container2">
+                <img src="images/23/oraple4.jpg" class="photo-small">
+                <p class="caption-small"> </p>
+            </div>
+             <div class="image-container2">
+                <img src="images/23/apple.jpg" class="photo-small">
+                <p class="caption-small"> </p>
+            </div>
+            <div class="image-container2">
+                <img src="images/23/orange.jpg" class="photo-small">
+                <p class="caption-small"> </p>
+            </div>
+            <div class="image-container2">
+                <img src="images/23/oraple.jpg" class="photo-small">
+                <p class="caption-small"> </p>
+            </div>
+        </div>
+    </div>
+    <div class="section-gallery">
+        <h2>Part 2.4</h2>
+        <p>For this part, I tried increasing the number of rounds of Laplacians and Gaussians, implemented the Gaussian of both a vertical and irregular mask.
+             For the seam reduction and better blending, I used np.linspace(1, 0, window_length) where window length corresponds with the middle 50% of the image in accordance 
+             with lecture examples. Everything to the left of this window of gradual decay is 1 and everything to the right is 0.
+        </p>
+        <pre>
+        <code>
+            def horizontal_mask(h, w):
+                left = w // 4
+                mid = w - 2 * left
+                right = w - left - mid
+
+                gradient = np.tile(np.linspace(1, 0, mid), (h, 1))
+
+                red_channel_left = np.ones((h, left))
+                green_channel_left = np.ones((h, left))
+                blue_channel_left = np.ones((h, left))
+
+                red_channel = np.zeros((h, right))
+                green_channel = np.zeros((h, right))
+                blue_channel = np.zeros((h, right))
+
+                red_channel_left = np.append(red_channel_left, gradient, axis=1)
+                green_channel_left = np.append(green_channel_left, gradient, axis=1)
+                blue_channel_left = np.append(blue_channel_left, gradient, axis=1)
+
+                red_channel = np.append(red_channel_left, red_channel, axis=1)
+                green_channel = np.append(green_channel_left, green_channel, axis=1)
+                blue_channel = np.append(blue_channel_left, blue_channel, axis=1)
+
+                return np.dstack([red_channel, green_channel, blue_channel])
+
+            def part24():
+                im_orange = plt.imread('./images/orange2.jpg')
+                im_apple = plt.imread('./images/apple2.jpg')
+
+                im_orange = np.dstack([im_orange[:,:,0], im_orange[:,:,1], im_orange[:,:,2]])
+                im_apple = np.dstack([im_apple[:,:,0], im_apple[:,:,1], im_apple[:,:,2]])
+
+                h = min(im_orange.shape[0], im_apple.shape[0])
+                w = min(im_apple.shape[1], im_orange.shape[1])
+
+                im_orange = im_orange[0:h, 0:w, :]
+                im_apple = im_apple[0:h, 0:w, :]
+
+                orange_laplacians = gaussian_stack(im_orange)
+                apple_laplacians = gaussian_stack(im_apple)
+                mask_gaussians = gaussian_stack(horizontal_mask(h, w)[0:h, 0:w, :], record_laplacians=False)
+
+                results = []
+                for orange_k, apple_k, mask_k in zip(orange_laplacians, apple_laplacians, mask_gaussians):
+                    plt.imshow(mask_k)
+                    plt.show()
+
+                    temp = np.multiply(apple_k, mask_k) + np.multiply(orange_k, 1 - mask_k)
+                    results.append(temp)
+
+                    # Normalize for the purpose of display
+                    disp = temp / np.max(np.abs(temp))
+                    disp = (disp - np.min(disp)) / (np.max(disp) - np.min(disp))
+
+                    plt.imshow(disp)
+                    plt.show()
+
+
+                result = sum(results)
+                plt.imshow(result)
+                plt.show() 
+        </code>
+        </pre>
+        <p style="text-align: center;">Results of horizontal masking with apples and oranges</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/24/maskedoraple0.jpg" class="photo-mid">
+                <p class="caption-small">Laplacian Level 0</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/masked_oraple1.jpg" class="photo-mid">
+                <p class="caption-small">Laplacian Level 1</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/masked_oraple2.jpg" class="photo-mid">
+                <p class="caption-small">Laplacian Level 2</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/masked_oraple3.jpg" class="photo-mid">
+                <p class="caption-small">Laplacian Level 3</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/masked_oraple4.jpg" class="photo-mid">
+                <p class="caption-small">Laplacian Level 4</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/masked_oraple5.jpg" class="photo-mid">
+                <p class="caption-small">Laplacian Level 5</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/masked_oraple7_gaussian.jpg" class="photo-mid">
+                <p class="caption-small">Deepest Gaussian level</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/oraple_good.jpg" class="photo-mid">
+                <p class="caption-small">Oraple Result</p>
+            </div>
+        </div>
+        <p style="text-align: center;">The code I used for irregular masking and inserting smaller images into larger base images by selecting a point of insertion in the larger image</p>
+        <pre>
+        <code>
+            def circular_mask(h, w, center_y, center_x, radius=60, radius_buffer=20):
+                # Create a circular mask
+                mask = []
+                for i in range(h):
+                    temp = []
+                    for j in range(w):
+                        dist = (center_y - i) ** 2 + (center_x - j) ** 2
+                        if dist <= radius ** 2:
+                            temp.append(1)
+                        elif dist <= (radius + radius_buffer) ** 2:
+                            amount = (np.sqrt(dist) - radius) / radius_buffer
+                            temp.append(1 - amount)
+                        else:
+                            temp.append(0)
+                    mask.append(temp)
+
+                channel_r = np.array(mask)
+                channel_g = np.array(mask)
+                channel_b = np.array(mask)
+                
+                return np.dstack([channel_r, channel_g, channel_b])
+
+            def part24custom():
+                '''
+                Applies a circular mask, inserting one image into another at the user's choice. 
+                The inserted image should be much smaller than the base image
+                '''
+                im_base = plt.imread('./images/portal.jpg')
+                im_insert = plt.imread('./images/labubu.jpg')
+
+                im_base = np.dstack([im_base[:, :, 0], im_base[:, :, 1], im_base[:, :, 2]])
+                im_insert = np.dstack([im_insert[:, :, 0], im_insert[:, :, 1], im_insert[:, :, 2]])
+
+                print('Please select 1 point in the base image to center the insertion.')
+                plt.imshow(im_base)
+                p1 = plt.ginput(1)
+                print(p1[0][0], p1[0][1])
+
+                h, w = im_base.shape[0], im_base.shape[1]
+
+                # Alter insertion image to be padded to fit h, w shape
+                ih, iw = im_insert.shape[0], im_insert.shape[1]
+
+                up = round(p1[0][1]) - (ih // 2)
+                left = round(p1[0][0]) - (iw // 2)
+                down = h - up - ih
+                right = w - left - iw
+
+                padding = ((up, down), (left, right))
+
+                print(padding)
+
+                im_insert_r = np.pad(im_insert[:, :, 0], padding, 'constant', constant_values=1)
+                im_insert_g = np.pad(im_insert[:, :, 1], padding, 'constant', constant_values=1)
+                im_insert_b = np.pad(im_insert[:, :, 2], padding, 'constant', constant_values=1)
+
+                im_insert = np.dstack([im_insert_r, im_insert_g, im_insert_b])
+
+                plt.imshow(im_insert)
+                plt.show()
+
+                base_laplacians = gaussian_stack(im_base)
+                insert_laplacians = gaussian_stack(im_insert)
+                mask_gaussians = gaussian_stack(circular_mask(h, w, round(p1[0][1]), round(p1[0][0]))[0:h, 0:w, :], record_laplacians=False)
+
+                results = []
+                for orange_k, apple_k, mask_k in zip(base_laplacians, insert_laplacians, mask_gaussians):
+                    plt.imshow(mask_k)
+                    plt.show()
+
+                    temp = np.multiply(apple_k, mask_k) + np.multiply(orange_k, 1 - mask_k)
+                    results.append(temp)
+
+                    # Normalize for the purpose of display
+                    disp = temp / np.max(np.abs(temp))
+                    disp = (disp - np.min(disp)) / (np.max(disp) - np.min(disp))
+
+                    plt.imshow(disp)
+                    plt.show()
+
+
+                result = sum(results)
+                plt.imshow(result)
+                plt.show() 
+        </code>
+        </pre>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/24/hand.jpg" class="photo-mid">
+                <p class="caption-small">the base image of the hand I wish to embed an eye in</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/eye.jpg" class="photo-mid">
+                <p class="caption-small">the image of the eye I will embed in the hand</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/handeye0.jpg" class="photo-mid">
+                <p class="caption-small">High frequencies of the handeye combined with mask</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/handeye1.jpg" class="photo-mid">
+                <p class="caption-small">Level 1</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/handeye2.jpg" class="photo-mid">
+                <p class="caption-small">Level 2</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/handeye3.jpg" class="photo-mid">
+                <p class="caption-small">Level 3</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/handeye4.jpg" class="photo-mid">
+                <p class="caption-small">Level 4</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/handeyefinal.jpg" class="photo-mid">
+                <p class="caption-small">Result</p>
+            </div>
+        </div>
+        <p style="text-align: center;">More fun with Irregular masking:</p>
+        <div class="images">
+            <div class="image-container">
+                <img src="images/24/liontiger.jpg" class="photo-mid">
+                <p class="caption-small">Botched lion tiger blending</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/labubu.jpg" class="photo-mid">
+                <p class="caption-small">Framing a labubu</p>
+            </div>
+            <div class="image-container">
+                <img src="images/24/orapleirregular24.jpg" class="photo-mid">
+                <p class="caption-small">Irregular Oraple</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
