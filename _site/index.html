@@ -7,7 +7,7 @@
 
   <title>
     
-       &middot; Dark Poole
+      isaachwang.dev &middot; Dark Poole
     
   </title>
 
@@ -18,7 +18,7 @@
 
   <!-- Begin Jekyll SEO tag v2.8.0 -->
 <meta name="generator" content="Jekyll v4.4.1" />
-<meta property="og:title" content="Dark Poole" />
+<meta property="og:title" content="isaachwang.dev" />
 <meta name="author" content="Mark Otto" />
 <meta property="og:locale" content="en_US" />
 <link rel="canonical" href="http://localhost:4000/" />
@@ -26,9 +26,9 @@
 <meta property="og:site_name" content="Dark Poole" />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="Dark Poole" />
+<meta property="twitter:title" content="isaachwang.dev" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","author":{"@type":"Person","name":"Mark Otto","url":"https://twitter.com/mdo"},"headline":"Dark Poole","name":"Dark Poole","url":"http://localhost:4000/"}</script>
+{"@context":"https://schema.org","@type":"WebSite","author":{"@type":"Person","name":"Mark Otto","url":"https://twitter.com/mdo"},"headline":"isaachwang.dev","name":"Dark Poole","url":"http://localhost:4000/"}</script>
 <!-- End Jekyll SEO tag -->
 
   <!-- Google tag (gtag.js) -->
@@ -39,6 +39,17 @@
     gtag('js', new Date());
 
     gtag('config', 'G-VCY8K157CL');
+  </script>
+  <script type="text/javascript" id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
   </script>
 </head>
 
@@ -74,6 +85,11 @@
 							<td>Accurate Medical Document Translation</td>
 							<td><a href="#medidoc-translate">View</a></td>
 					</tr>
+          <tr>
+							<td><a href="#nerf">NeRF model</a></td>
+							<td>ML NeRF model to track 3D scenes from different angles</td>
+							<td><a href="#nerf">View</a></td>
+					</tr>
 					<tr>
 							<td><a href="#risc-v-cpu">RISC-V CPU</a></td>
 							<td>Designed pipelined RISC-V CPU in Logisim</td>
@@ -83,11 +99,6 @@
 							<td><a href="#digit-classifier">Handwritten Digit Classifier</a></td>
 							<td>ML RISC-V assembly code to classify digits</td>
 							<td><a href="#digit-classifier">View</a></td>
-					</tr>
-          <tr>
-							<td><a href="#nerf">NeRF model</a></td>
-							<td>ML NeRF model to track 3D scenes from different angles</td>
-							<td><a href="#nerf">View</a></td>
 					</tr>
 					<tr>
 							<td><a href="#transformer">Transformer Project</a></td>
@@ -149,13 +160,6 @@
                 </td>
                 <td>Wrote a ML classifier on MNIST digits in RISC-V assembly. Implemented the matrix and vector operations such as ReLU, Argmax, and dot products along with loss functions.</td>
             </tr>
-            <tr id="factgrid-cuneiform">
-                <td><a href="https://drive.google.com/file/d/1vlQzFKQ6lDvLLq6qpwZd_4Shadr_Uq7i/view">FactGrid Cuneiform Project</a></td>
-                <td>
-                    <img src="/assets/images/fixed_bounding_boxes.png" alt="FactGrid Cuneiform Project" />
-                </td>
-                <td>Implemented machine learning model to segment and transcribe dataset of 1,000+ annotated Cuneiform tablets for inference with YOLOv8. Curated dataset of cuneiform tablets and wrote data processing for inference and cataloguing results.</td>
-            </tr>
             <tr id="transformer">
                 <td><a href="https://github.com/datac182fa24/datac182_hw3_student">Transformer Project</a></td>
                 <td>
@@ -169,6 +173,13 @@
                     <img src="/assets/images/tocharian.jpg" alt="Tocharian Image" />
                 </td>
                 <td>Curated dataset of ancient tocharian texts scraped from the online <a href="https://cetom.univie.ac.at/">CEToM</a> database. Created an asynchronous Python script that ran parallelized scraping of Tocharian manuscripts listings and saved in a file. Collaborated with BAIR Research lab in finetuning a LLM model off this Tocharian data.</td>
+            </tr>
+            <tr id="factgrid-cuneiform">
+                <td><a href="https://drive.google.com/file/d/1vlQzFKQ6lDvLLq6qpwZd_4Shadr_Uq7i/view">FactGrid Cuneiform Project</a></td>
+                <td>
+                    <img src="/assets/images/fixed_bounding_boxes.png" alt="FactGrid Cuneiform Project" />
+                </td>
+                <td>Implemented machine learning model to segment and transcribe dataset of 1,000+ annotated Cuneiform tablets for inference with YOLOv8. Curated dataset of cuneiform tablets and wrote data processing for inference and cataloguing results.</td>
             </tr>
         </tbody>
     </table>
